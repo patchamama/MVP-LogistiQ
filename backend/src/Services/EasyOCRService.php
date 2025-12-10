@@ -6,6 +6,7 @@ class EasyOCRService
 {
     private string $uploadsDir;
     private string $scriptsDir;
+    private string $pythonCmd;
 
     public function __construct(
         string $uploadsDir = __DIR__ . '/../../uploads',
@@ -13,6 +14,7 @@ class EasyOCRService
     ) {
         $this->uploadsDir = $uploadsDir;
         $this->scriptsDir = $scriptsDir;
+        $this->pythonCmd = $this->detectPythonCommand();
 
         if (!is_dir($this->uploadsDir)) {
             mkdir($this->uploadsDir, 0755, true);
@@ -25,6 +27,22 @@ class EasyOCRService
     public function processImage(string $imageBase64): array
     {
         try {
+            // Check if Python is available
+            if (!$this->pythonCmd) {
+                return [
+                    'success' => false,
+                    'error' => 'Python no está instalado en el servidor'
+                ];
+            }
+
+            // Check if EasyOCR is installed
+            if (!$this->isEasyOCRInstalled()) {
+                return [
+                    'success' => false,
+                    'error' => 'EasyOCR no está instalado. Run: setup-easyocr.sh'
+                ];
+            }
+
             // Save temporary image
             $tempImage = $this->saveTempImage($imageBase64);
 
@@ -45,9 +63,9 @@ class EasyOCRService
                 ];
             }
 
-            // Run Python script
-            $command = sprintf('python3 "%s" "%s" 2>/dev/null', $pythonScript, $tempImage);
-            $output = shell_exec($command);
+            // Run Python script with proper escaping
+            $command = $this->buildPythonCommand($pythonScript, $tempImage);
+            $output = @shell_exec($command);
 
             unlink($tempImage);
 
@@ -102,6 +120,67 @@ class EasyOCRService
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    /**
+     * Detect Python command (python3, python, or none)
+     */
+    private function detectPythonCommand(): string
+    {
+        // Try python3 first
+        $result = @shell_exec('which python3 2>/dev/null');
+        if (!empty($result)) {
+            return 'python3';
+        }
+
+        // Try python as fallback
+        $result = @shell_exec('which python 2>/dev/null');
+        if (!empty($result)) {
+            return 'python';
+        }
+
+        // Fallback: try to execute python version check
+        $output = [];
+        $returnCode = 0;
+        @exec('python3 --version 2>&1', $output, $returnCode);
+        if ($returnCode === 0) {
+            return 'python3';
+        }
+
+        @exec('python --version 2>&1', $output, $returnCode);
+        if ($returnCode === 0) {
+            return 'python';
+        }
+
+        return '';
+    }
+
+    /**
+     * Check if EasyOCR is installed
+     */
+    public function isEasyOCRInstalled(): bool
+    {
+        if (!$this->pythonCmd) {
+            return false;
+        }
+
+        $command = $this->pythonCmd . ' -c "import easyocr; print(easyocr.__version__)" 2>&1';
+        $output = @shell_exec($command);
+
+        return !empty($output);
+    }
+
+    /**
+     * Build Python command with proper escaping
+     */
+    private function buildPythonCommand(string $scriptPath, string $imagePath): string
+    {
+        // Escape paths for shell
+        $scriptPath = escapeshellarg($scriptPath);
+        $imagePath = escapeshellarg($imagePath);
+
+        // Build command with stderr redirected
+        return "{$this->pythonCmd} {$scriptPath} {$imagePath} 2>/dev/null";
     }
 
     /**

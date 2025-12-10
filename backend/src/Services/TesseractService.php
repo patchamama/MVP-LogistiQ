@@ -20,6 +20,14 @@ class TesseractService
     public function processImage(string $imageBase64): array
     {
         try {
+            // Check if tesseract is installed
+            if (!$this->isTesseractInstalled()) {
+                return [
+                    'success' => false,
+                    'error' => 'Tesseract no está instalado en el servidor'
+                ];
+            }
+
             // Save temporary image
             $tempImage = $this->saveTempImage($imageBase64);
 
@@ -30,18 +38,9 @@ class TesseractService
                 ];
             }
 
-            // Check if tesseract is installed
-            $whichResult = shell_exec('which tesseract 2>/dev/null');
-            if (!$whichResult) {
-                return [
-                    'success' => false,
-                    'error' => 'Tesseract no está instalado en el servidor'
-                ];
-            }
-
-            // Run tesseract with simple filter
+            // Run tesseract
             $tempOutput = sys_get_temp_dir() . '/ocr_' . uniqid();
-            $command = sprintf('tesseract "%s" "%s" -l spa+eng 2>/dev/null', $tempImage, $tempOutput);
+            $command = $this->buildTesseractCommand($tempImage, $tempOutput);
 
             exec($command, $output, $returnCode);
 
@@ -82,6 +81,39 @@ class TesseractService
                 'error' => 'Excepción: ' . $e->getMessage()
             ];
         }
+    }
+
+    /**
+     * Check if Tesseract is installed
+     */
+    public function isTesseractInstalled(): bool
+    {
+        // Try standard which command (works on macOS, Linux)
+        $result = @shell_exec('which tesseract 2>/dev/null');
+        if (!empty($result)) {
+            return true;
+        }
+
+        // Fallback: try to execute tesseract --version
+        $output = [];
+        $returnCode = 0;
+        @exec('tesseract --version 2>&1', $output, $returnCode);
+
+        return $returnCode === 0;
+    }
+
+    /**
+     * Build Tesseract command based on OS
+     */
+    private function buildTesseractCommand(string $imagePath, string $outputPath): string
+    {
+        // Escape paths for shell
+        $imagePath = escapeshellarg($imagePath);
+        $outputPath = escapeshellarg($outputPath);
+
+        // Use tesseract with language detection
+        // Redirect stderr to avoid cluttering output
+        return "tesseract $imagePath $outputPath -l spa+eng 2>/dev/null";
     }
 
     /**

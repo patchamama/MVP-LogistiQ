@@ -29,14 +29,24 @@ mkdir -p backend/uploads
 chmod 755 backend/uploads
 ```
 
-### Paso 4: Instalar Tesseract (recomendado)
-```bash
-# En macOS
-brew install tesseract
+### Paso 4: Instalar OCR Engines (recomendado)
 
-# En Ubuntu/Debian
-sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-spa
+**Opción A: Instalar ambos (recomendado)** - Detecta automáticamente tu SO
+```bash
+./scripts/setup-ocr.sh
 ```
+
+**Opción B: Instalar solo Tesseract**
+```bash
+./scripts/setup-tesseract.sh
+```
+
+**Opción C: Instalar solo EasyOCR**
+```bash
+./scripts/setup-easyocr.sh
+```
+
+Soportado en: macOS, Ubuntu/Debian, CentOS/RHEL, Fedora, Alpine
 
 ## 🚀 Ejecutar el MVP
 
@@ -97,10 +107,21 @@ pip3 install easyocr opencv-python-headless
 | Problema | Solución |
 |----------|----------|
 | CORS error | Verificar que backend corre en `localhost:8000` |
-| Tesseract not found | Ejecutar `./scripts/setup-tesseract.sh` |
+| Tesseract not found | Ejecutar `./scripts/setup-ocr.sh` o `./scripts/setup-tesseract.sh` |
+| Python/EasyOCR not found | Ejecutar `./scripts/setup-ocr.sh` (seleccionar opción 1 o 3) |
 | API returns 500 | Ver logs del backend en terminal |
 | No reconoce código | Intentar con "EasyOCR" o "Ambos" engines |
 | Puerto ya en uso | Cambiar en vite.config.ts o composer.json |
+
+## ✅ Verificar Instalación
+
+```bash
+# Verificar Tesseract
+tesseract --version
+
+# Verificar EasyOCR
+python3 -c "import easyocr; print('OK')"
+```
 
 ## 📚 Documentación
 

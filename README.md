@@ -63,16 +63,27 @@ composer install
 
 ### 4. Instalar OCR Engines
 
-#### Tesseract (recomendado para MVP):
+LogistiQ incluye scripts de instalación cross-platform para macOS, Linux y otros sistemas.
+
+#### Opción 1: Instalar ambos (recomendado)
+```bash
+cd ../scripts
+./setup-ocr.sh
+```
+
+#### Opción 2: Instalar solo Tesseract
 ```bash
 cd ../scripts
 ./setup-tesseract.sh
 ```
 
-#### EasyOCR (opcional, para mejor precisión):
+#### Opción 3: Instalar solo EasyOCR (Python)
 ```bash
+cd ../scripts
 ./setup-easyocr.sh
 ```
+
+**Soportado en:** macOS (Homebrew), Ubuntu/Debian, CentOS/RHEL, Fedora, Alpine Linux
 
 ## 📝 Configuración
 
@@ -183,13 +194,30 @@ Los productos se almacenan en `backend/data/products.json`. Puedes agregar más 
 ## 🔧 Troubleshooting
 
 ### Error: "Tesseract no está instalado"
-Ejecutar el script de instalación:
+Ejecutar el script de instalación correspondiente al SO:
 ```bash
+# macOS
 ./scripts/setup-tesseract.sh
+
+# O usar el script master que detecta el SO automáticamente
+./scripts/setup-ocr.sh
 ```
 
+### Error: "Python no está instalado"
+El script de instalación de EasyOCR instala Python si es necesario:
+```bash
+./scripts/setup-easyocr.sh
+```
+
+### Error: "EasyOCR no está instalado"
+Ejecutar el script de instalación con el script master:
+```bash
+./scripts/setup-ocr.sh
+```
+Seleccionar opción 1 (ambos) u opción 3 (solo EasyOCR)
+
 ### Error: "Script de EasyOCR no encontrado"
-Asegurar que el script existe en `backend/scripts/easyocr_process.py`
+Asegurar que el script Python existe en `scripts/easyocr_process.py`. Si no existe, restaurar desde el repositorio.
 
 ### CORS Error desde el Frontend
 Verificar que el backend tiene CORS habilitado y la URL correcta en `.env`
@@ -197,6 +225,15 @@ Verificar que el backend tiene CORS habilitado y la URL correcta en `.env`
 ### Error: "producto no encontrado"
 Los códigos de prueba en la base de datos son: `12345`, `54321`, `67890`, etc.
 Cambiar el motor OCR a "EasyOCR" o "Ambos" para mejor precisión.
+
+### Verificar instalación de OCR Engines
+```bash
+# Verificar Tesseract
+tesseract --version
+
+# Verificar EasyOCR
+python3 -c "import easyocr; print(easyocr.__version__)"
+```
 
 ## 📊 Próximos Pasos
 
