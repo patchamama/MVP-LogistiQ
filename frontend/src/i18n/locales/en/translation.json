@@ -1,0 +1,74 @@
+{
+  "app": {
+    "title": "LogistiQ",
+    "subtitle": "Inventory Management with OCR"
+  },
+  "header": {
+    "title": "LogistiQ",
+    "subtitle": "Inventory Management with OCR"
+  },
+  "main": {
+    "title": "Scan a product label",
+    "description": "Use your camera or upload an image to recognize product codes and get inventory information."
+  },
+  "camera": {
+    "title": "Scan a product label",
+    "description": "Use your camera or upload an image to recognize product codes and get inventory information.",
+    "openCamera": "Open Camera",
+    "selectImage": "Select Image",
+    "capture": "Capture",
+    "cancel": "Cancel",
+    "ocrEngine": "OCR Engine:",
+    "engines": {
+      "tesseract": "Tesseract (fast)",
+      "easyocr": "EasyOCR (accurate)",
+      "both": "Both"
+    }
+  },
+  "product": {
+    "title": "Product Information",
+    "code": "Code",
+    "name": "Name",
+    "description": "Description",
+    "category": "Category",
+    "price": "Price",
+    "stock": "Stock",
+    "units": "units",
+    "locations": "Locations",
+    "supplier": "Supplier"
+  },
+  "ocr": {
+    "title": "OCR Data",
+    "engine": "Engine",
+    "rawText": "Recognized text",
+    "filteredCode": "Filtered code"
+  },
+  "actions": {
+    "scanAnother": "Scan another product",
+    "tryAgain": "Try again"
+  },
+  "loading": "Processing image...",
+  "error": "Error",
+  "features": {
+    "capture": {
+      "title": "Capture",
+      "description": "Open your camera and capture a clear photo of the product label."
+    },
+    "ocr": {
+      "title": "OCR",
+      "description": "The system automatically recognizes the product code using artificial intelligence."
+    },
+    "info": {
+      "title": "Information",
+      "description": "Get details like price, stock, and location of the product in the warehouse."
+    },
+    "fast": {
+      "title": "Fast",
+      "description": "Works without internet connection. Load your data once."
+    }
+  },
+  "footer": {
+    "text": "LogistiQ MVP © 2024"
+  },
+  "language": "Language"
+}

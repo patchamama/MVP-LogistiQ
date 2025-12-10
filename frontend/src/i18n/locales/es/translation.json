@@ -1,0 +1,74 @@
+{
+  "app": {
+    "title": "LogistiQ",
+    "subtitle": "Gestión de Inventario con OCR"
+  },
+  "header": {
+    "title": "LogistiQ",
+    "subtitle": "Gestión de Inventario con OCR"
+  },
+  "main": {
+    "title": "Escanea una etiqueta de producto",
+    "description": "Usa tu cámara o carga una imagen para reconocer códigos de productos y obtener información del inventario."
+  },
+  "camera": {
+    "title": "Escanea una etiqueta de producto",
+    "description": "Usa tu cámara o carga una imagen para reconocer códigos de productos y obtener información del inventario.",
+    "openCamera": "Abrir Cámara",
+    "selectImage": "Seleccionar Imagen",
+    "capture": "Capturar",
+    "cancel": "Cancelar",
+    "ocrEngine": "Motor OCR:",
+    "engines": {
+      "tesseract": "Tesseract (rápido)",
+      "easyocr": "EasyOCR (preciso)",
+      "both": "Ambos"
+    }
+  },
+  "product": {
+    "title": "Información del Producto",
+    "code": "Código",
+    "name": "Nombre",
+    "description": "Descripción",
+    "category": "Categoría",
+    "price": "Precio",
+    "stock": "Stock",
+    "units": "unidades",
+    "locations": "Ubicaciones",
+    "supplier": "Proveedor"
+  },
+  "ocr": {
+    "title": "Datos OCR",
+    "engine": "Motor",
+    "rawText": "Texto reconocido",
+    "filteredCode": "Código filtrado"
+  },
+  "actions": {
+    "scanAnother": "Escanear otro producto",
+    "tryAgain": "Intentar de nuevo"
+  },
+  "loading": "Procesando imagen...",
+  "error": "Error",
+  "features": {
+    "capture": {
+      "title": "Captura",
+      "description": "Abre tu cámara y captura una foto clara de la etiqueta del producto."
+    },
+    "ocr": {
+      "title": "OCR",
+      "description": "El sistema reconoce automáticamente el código del producto usando inteligencia artificial."
+    },
+    "info": {
+      "title": "Información",
+      "description": "Obtén detalles como precio, stock y ubicación del producto en el almacén."
+    },
+    "fast": {
+      "title": "Rápido",
+      "description": "Funciona sin conexión a internet. Carga tus datos una sola vez."
+    }
+  },
+  "footer": {
+    "text": "LogistiQ MVP © 2024"
+  },
+  "language": "Idioma"
+}

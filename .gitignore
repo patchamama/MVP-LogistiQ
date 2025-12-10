@@ -48,3 +48,4 @@ Thumbs.db
 # Build outputs
 frontend/dist/
 backend/public/.htaccess
+backend/.phpunit.result.cache

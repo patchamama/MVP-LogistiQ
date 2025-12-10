@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { processImage } from '../services/api'
 import { APIResponse, CameraError } from '../types/product'
 import LoadingSpinner from './LoadingSpinner'
 import ProductResult from './ProductResult'
 
 export default function CameraCapture() {
+  const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -27,7 +29,7 @@ export default function CameraCapture() {
       }
     } catch (err) {
       const error = err as CameraError
-      setError(`No se pudo acceder a la cámara: ${error.message}`)
+      setError(`${t('camera.title')}: ${error.message}`)
     }
   }, [])
 
@@ -107,15 +109,15 @@ export default function CameraCapture() {
       )}
 
       <div className="flex gap-2 mb-4">
-        <label className="text-sm font-medium text-gray-700">Motor OCR:</label>
+        <label className="text-sm font-medium text-gray-700">{t('camera.ocrEngine')}</label>
         <select
           value={ocrEngine}
           onChange={(e) => setOcrEngine(e.target.value as any)}
           className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
         >
-          <option value="tesseract">Tesseract (rápido)</option>
-          <option value="easyocr">EasyOCR (preciso)</option>
-          <option value="both">Ambos</option>
+          <option value="tesseract">{t('camera.engines.tesseract')}</option>
+          <option value="easyocr">{t('camera.engines.easyocr')}</option>
+          <option value="both">{t('camera.engines.both')}</option>
         </select>
       </div>
 
@@ -125,7 +127,7 @@ export default function CameraCapture() {
             onClick={startCamera}
             className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
-            📷 Abrir Cámara
+            📷 {t('camera.openCamera')}
           </button>
 
           <div className="relative">
@@ -140,7 +142,7 @@ export default function CameraCapture() {
               onClick={() => fileInputRef.current?.click()}
               className="w-full py-2 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
             >
-              📁 Seleccionar Imagen
+              📁 {t('camera.selectImage')}
             </button>
           </div>
         </div>
@@ -159,13 +161,13 @@ export default function CameraCapture() {
               onClick={capturePhoto}
               className="flex-1 py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
             >
-              📸 Capturar
+              📸 {t('camera.capture')}
             </button>
             <button
               onClick={stopCamera}
               className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
             >
-              ✕ Cancelar
+              ✕ {t('camera.cancel')}
             </button>
           </div>
         </div>

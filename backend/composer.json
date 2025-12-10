@@ -8,15 +8,23 @@
         "slim/psr7": "^1.6"
     },
     "require-dev": {
-        "phpstan/phpstan": "^1.0"
+        "phpstan/phpstan": "^1.0",
+        "phpunit/phpunit": "^10.0"
     },
     "autoload": {
         "psr-4": {
             "LogistiQ\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "LogistiQ\\Tests\\": "tests/"
+        }
+    },
     "scripts": {
         "start": "php -S localhost:8000 -t public",
-        "analyze": "phpstan analyse src"
+        "analyze": "phpstan analyse src",
+        "test": "phpunit",
+        "test:coverage": "phpunit --coverage-html coverage"
     }
 }

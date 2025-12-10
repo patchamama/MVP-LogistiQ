@@ -1,0 +1,24 @@
+{
+  "products": [
+    {
+      "code": "12345",
+      "name": "Tornillo M8x20",
+      "description": "Tornillo métrico 8mm x 20mm",
+      "price": 0.50,
+      "stock": 150,
+      "locations": ["Estantería A-3"],
+      "supplier": "Proveedor A",
+      "category": "Tornillería"
+    },
+    {
+      "code": "54321",
+      "name": "Arandela de nylon",
+      "description": "Arandela de nylon 10mm",
+      "price": 2.50,
+      "stock": 450,
+      "locations": ["Estantería C-2"],
+      "supplier": "Proveedor B",
+      "category": "Arandelas"
+    }
+  ]
+}
