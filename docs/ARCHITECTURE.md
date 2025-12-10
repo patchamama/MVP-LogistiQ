@@ -492,20 +492,20 @@ Final (Rails integration):
 
 ### Ventajas de esta Arquitectura
 
-✅ **Separación de responsabilidades**: Frontend y backend completamente desacoplados
-✅ **Escalabilidad**: Cada capa puede escalar independientemente
-✅ **Validación rápida**: MVP funcional para proof-of-concept
-✅ **Flexibilidad**: Fácil migración a stack final (Rails)
-✅ **Confiabilidad**: Dual OCR engines para mayor precisión
-✅ **Usabilidad**: PWA para acceso desde cualquier dispositivo
+- ✅ **Separación de responsabilidades**: Frontend y backend completamente desacoplados
+- ✅ **Escalabilidad**: Cada capa puede escalar independientemente
+- ✅ **Validación rápida**: MVP funcional para proof-of-concept
+- ✅ **Flexibilidad**: Fácil migración a stack final (Rails)
+- ✅ **Confiabilidad**: Dual OCR engines para mayor precisión
+- ✅ **Usabilidad**: PWA para acceso desde cualquier dispositivo
 
 ### Áreas de Mejora Futuras
 
-📋 **Procesamiento asíncrono**: Jobs en background (OCR intensive)
-🔐 **Autenticación**: JWT + OAuth para usuarios
-📊 **Analytics**: Tracking de búsquedas y productos
-🔄 **Sincronización**: Offline-first con IndexedDB
-🌐 **Internacionalización**: Soporte múltiples idiomas/monedas
+- 📋 **Procesamiento asíncrono**: Jobs en background (OCR intensive)
+- 🔐 **Autenticación**: JWT + OAuth para usuarios
+- 📊 **Analytics**: Tracking de búsquedas y productos
+- 🔄 **Sincronización**: Offline-first con IndexedDB
+- 🌐 **Internacionalización**: Soporte múltiples idiomas/monedas
 
 ### Conclusión
 
