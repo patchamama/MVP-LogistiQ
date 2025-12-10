@@ -1,23 +1,47 @@
 # Tests Directory Index
 
-Carpeta de pruebas para LogistiQ MVP con imágenes, scripts y guías de testing.
+Carpeta completa de pruebas para LogistiQ MVP con imágenes básicas y avanzadas, scripts de generación y guías de testing.
 
 ## 📁 Contenido
 
-### Imágenes de Prueba
+### Imágenes Básicas (5 imágenes)
+Ubicación: `tests/`
 - `product_12345.png` - Tornillo M8x20 (€0.50)
 - `product_54321.png` - Arandela de nylon (€2.50)
 - `product_67890.png` - Tuerca M10 (€0.75)
 - `product_11111.png` - Rodamiento 6203 (€15.99)
 - `product_22222.png` - Cable acero (€1.20)
 
+**Características:**
+- Fondos de colores sólidos diferentes
+- Tipografía simple (Helvetica)
+- Tamaño: 400x300px
+- Ideales para pruebas rápidas
+
+### Imágenes Avanzadas (20 imágenes)
+Ubicación: `tests/variants/`
+- 4 variantes por producto × 5 productos = 20 imágenes
+- Fondos blancos con textura metalizada
+- 4 tipografías diferentes (Helvetica, Times, Courier, Courier Bold)
+- Tamaño: 500x400px
+- Patrones de piezas específicos para cada tipo
+- Código de barras simulado
+
+**Variantes:**
+- `*_white_modern.png` - Helvetica Bold (moderno)
+- `*_white_classic.png` - Times Roman (formal)
+- `*_white_monospace.png` - Courier Regular (industrial)
+- `*_white_mono_bold.png` - Courier Bold (robusto)
+
 ### Scripts
-- `generate_test_images.py` - Genera imágenes de productos de prueba
-- `validate_images.py` - Valida que todas las imágenes son válidas
+- `generate_test_images.py` - Genera 5 imágenes básicas de productos
+- `generate_advanced_test_images.py` - Genera 20 imágenes avanzadas con múltiples tipografías
+- `validate_images.py` - Valida que todas las imágenes PNG son válidas
 
 ### Documentación
 - `README.md` - Guía rápida de uso
 - `TESTING_GUIDE.md` - Plan de pruebas completo (10 tests)
+- `ADVANCED_IMAGES.md` - Documentación detallada de imágenes avanzadas
 - `INDEX.md` - Este archivo
 
 ## 🚀 Quick Start
@@ -109,11 +133,87 @@ Salida esperada:
 - [ ] Completar la matriz de resultados
 - [ ] Registrar cualquier issue encontrado
 
+## 🆕 Características Nuevas: Imágenes Avanzadas
+
+### Fondos Blancos Texturizados
+- ✓ Simulan la apariencia de piezas metálicas reales
+- ✓ Textura sutil metalizada para realismo
+- ✓ Mejor contraste para precisión OCR
+
+### Múltiples Tipografías por Producto
+Cada producto disponible en 4 estilos:
+1. **Helvetica Bold** - Moderno y limpio
+2. **Times Roman** - Formal y clásico
+3. **Courier** - Industrial y monoespaciado
+4. **Courier Bold** - Robusto y legible
+
+### Patrones de Piezas Realistas
+Cada imagen incluye un patrón visual representando:
+- 🔩 **Tornillo:** Espiral helicoidal
+- ⭕ **Arandela:** Círculos concéntricos
+- 🔷 **Tuerca:** Hexágono
+- ⚡ **Rodamiento:** Bolillas interiores
+- 🧵 **Cable:** Patrón ondulado
+
+### Elementos Adicionales
+- ✓ Código de barras simulado (25 barras alternadas)
+- ✓ Caja destacada para código principal
+- ✓ Separadores visuales
+- ✓ Información de precio y código
+
+## 🎯 Comparativa: Básicas vs Avanzadas
+
+| Aspecto | Básicas | Avanzadas |
+|---------|---------|-----------|
+| **Cantidad** | 5 | 20 |
+| **Tamaño** | 400×300px | 500×400px |
+| **Tipografías** | 1 (Helvetica) | 4 (Helvetica, Times, Courier, Courier Bold) |
+| **Fondos** | Colores sólidos | Blanco + textura metalizada |
+| **Patrones** | Simples | Patrones de piezas específicos |
+| **Código de barras** | Básico | Realista (25 barras) |
+| **Uso ideal** | Pruebas rápidas | Validación OCR completa |
+
+## 🧪 Plan de Pruebas Expandido
+
+### Validación Básica (5 minutos)
+```bash
+# Procesa solo imágenes básicas con Tesseract
+python3 tests/validate_images.py
+```
+
+### Validación Intermedia (15 minutos)
+```bash
+# Procesa variantes Helvetica (white_modern)
+# Compara Tesseract vs EasyOCR
+```
+
+### Validación Completa (30+ minutos)
+```bash
+# Procesa todas las 20 imágenes avanzadas
+# Prueba ambos motores OCR
+# Registra métricas detalladas
+# Identifica tipografías problemáticas
+```
+
+## 📈 Métricas Recomendadas
+
+Para cada prueba, registra:
+- ✓ Imagen utilizada (código + variante)
+- ✓ Motor OCR utilizado
+- ✓ Código reconocido (¿correcto?)
+- ✓ Tiempo de procesamiento (ms)
+- ✓ Confianza OCR
+- ✓ Notas especiales
+
 ## 🐛 Troubleshooting
 
 Ver `TESTING_GUIDE.md` sección "Troubleshooting" para solucionar problemas comunes.
 
 ---
 
+**Total de imágenes:** 25 (5 básicas + 20 avanzadas)
+**Cobertura de tipografías:** 4 estilos diferentes
+**Rango de validación:** Extenso (múltiples fonts)
+**Productos:** 5 tipos diferentes
 **Última actualización:** 2025-12-10
-**Versión:** 1.0
+**Versión:** 2.0
