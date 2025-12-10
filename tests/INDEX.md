@@ -4,6 +4,16 @@ Carpeta completa de pruebas para LogistiQ MVP con imágenes básicas y avanzadas
 
 ## 📁 Contenido
 
+### Imágenes Reales (1 imagen)
+Ubicación: `tests/variants/`
+- `danowind.jpeg` - Relé Danowind real del cliente (código: 100 002 10566)
+
+**Características:**
+- Foto real de componente
+- Etiqueta con código claro
+- Desafíos OCR reales (reflexiones, fondo variable)
+- Excelente para validar en condiciones de producción
+
 ### Imágenes Básicas (5 imágenes)
 Ubicación: `tests/`
 - `product_12345.png` - Tornillo M8x20 (€0.50)
@@ -42,6 +52,7 @@ Ubicación: `tests/variants/`
 - `README.md` - Guía rápida de uso
 - `TESTING_GUIDE.md` - Plan de pruebas completo (10 tests)
 - `ADVANCED_IMAGES.md` - Documentación detallada de imágenes avanzadas
+- `REAL_WORLD_IMAGES.md` - Guía para imágenes reales del cliente
 - `INDEX.md` - Este archivo
 
 ## 🚀 Quick Start
@@ -211,9 +222,10 @@ Ver `TESTING_GUIDE.md` sección "Troubleshooting" para solucionar problemas comu
 
 ---
 
-**Total de imágenes:** 25 (5 básicas + 20 avanzadas)
-**Cobertura de tipografías:** 4 estilos diferentes
-**Rango de validación:** Extenso (múltiples fonts)
-**Productos:** 5 tipos diferentes
+**Total de imágenes:** 26 (1 real + 5 básicas + 20 avanzadas)
+**Cobertura de tipografías:** 4 estilos diferentes (sintéticas)
+**Rango de validación:** Extenso (múltiples fonts + imagen real)
+**Productos:** 5 tipos diferentes (sintéticos) + 1 relé real (cliente)
+**Imágenes Reales:** 1 (Danowind - código 100 002 10566)
 **Última actualización:** 2025-12-10
-**Versión:** 2.0
+**Versión:** 3.0
