@@ -1,0 +1,84 @@
+{
+  "products": [
+    {
+      "code": "12345",
+      "name": "Tornillo M8x20",
+      "description": "Tornillo métrico 8mm x 20mm, cabeza hexagonal",
+      "price": 0.50,
+      "stock": 150,
+      "locations": ["Estantería A-3", "Estantería B-1"],
+      "supplier": "Proveedor A",
+      "category": "Tornillería"
+    },
+    {
+      "code": "54321",
+      "name": "Arandela de nylon",
+      "description": "Arandela de nylon 10mm, paquete de 100",
+      "price": 2.50,
+      "stock": 450,
+      "locations": ["Estantería C-2"],
+      "supplier": "Proveedor B",
+      "category": "Arandelas"
+    },
+    {
+      "code": "67890",
+      "name": "Tuerca M10",
+      "description": "Tuerca métrica M10, acero galvanizado",
+      "price": 0.75,
+      "stock": 320,
+      "locations": ["Estantería A-1", "Estantería A-2"],
+      "supplier": "Proveedor A",
+      "category": "Tuercas"
+    },
+    {
+      "code": "11111",
+      "name": "Rodamiento de bolas 6203",
+      "description": "Rodamiento de bolas de profundidad, 17x40x12mm",
+      "price": 15.99,
+      "stock": 25,
+      "locations": ["Estantería D-1"],
+      "supplier": "Proveedor C",
+      "category": "Rodamientos"
+    },
+    {
+      "code": "22222",
+      "name": "Cable de acero galvanizado",
+      "description": "Cable de acero galvanizado 2mm, metro lineal",
+      "price": 1.20,
+      "stock": 500,
+      "locations": ["Estantería E-1", "Estantería E-2"],
+      "supplier": "Proveedor D",
+      "category": "Cables"
+    },
+    {
+      "code": "33333",
+      "name": "Grasa lubricante industrial",
+      "description": "Grasa de alta viscosidad para rodamientos, bote 500ml",
+      "price": 8.50,
+      "stock": 40,
+      "locations": ["Estantería F-1"],
+      "supplier": "Proveedor B",
+      "category": "Lubricantes"
+    },
+    {
+      "code": "44444",
+      "name": "Chaveta cuadrada",
+      "description": "Chaveta de acero cuadrada 6x6x25mm",
+      "price": 0.35,
+      "stock": 200,
+      "locations": ["Estantería A-4"],
+      "supplier": "Proveedor A",
+      "category": "Chavetas"
+    },
+    {
+      "code": "55555",
+      "name": "Válvula de control de presión",
+      "description": "Válvula de control de presión 1/4NPT, 0-10 bar",
+      "price": 45.99,
+      "stock": 8,
+      "locations": ["Estantería G-1"],
+      "supplier": "Proveedor E",
+      "category": "Válvulas"
+    }
+  ]
+}
