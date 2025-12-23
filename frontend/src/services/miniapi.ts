@@ -45,6 +45,7 @@ export interface WarehouseEntry {
   operario: string
   observaciones?: string
   imagenes: string[]
+  referenciaScanned?: string
 }
 
 export interface CheckReferenceResponse {

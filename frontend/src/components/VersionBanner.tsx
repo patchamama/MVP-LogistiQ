@@ -6,7 +6,7 @@ export default function VersionBanner() {
   const [currentVersion, setCurrentVersion] = useState(APP_VERSION)
 
   useEffect(() => {
-    // Check for updates every 60 seconds
+    // Check for updates only once on component mount
     const checkForUpdates = async () => {
       try {
         const response = await fetch('/MVP-LogistiQ/version.json', {
@@ -18,7 +18,7 @@ export default function VersionBanner() {
 
         if (response.ok) {
           const data = await response.json()
-          if (data.version !== currentVersion) {
+          if (data.version !== APP_VERSION) {
             setUpdateAvailable(true)
             setCurrentVersion(data.version)
           }
@@ -28,9 +28,8 @@ export default function VersionBanner() {
       }
     }
 
-    const interval = setInterval(checkForUpdates, 60000)
-    return () => clearInterval(interval)
-  }, [currentVersion])
+    checkForUpdates()
+  }, [])
 
   const handleUpdate = () => {
     // Clear service worker cache and reload

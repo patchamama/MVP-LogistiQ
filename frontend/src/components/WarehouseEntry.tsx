@@ -364,6 +364,7 @@ export default function WarehouseEntry() {
         operario: operario.trim(),
         observaciones: observaciones.trim(),
         imagenes,
+        referenciaScanned: referencia.trim(),
       }
 
       const response = await createEntry(entry)

@@ -14,6 +14,7 @@ $fabricante = trim($input['fabricante']);
 $cantidad = (int)$input['cantidad'];
 $operario = trim($input['operario']);
 $observaciones = trim($input['observaciones'] ?? '');
+$referenciaScanned = trim($input['referenciaScanned'] ?? '');
 $imagenes = $input['imagenes'];
 
 // Validar que los datos no estén vacíos
@@ -100,6 +101,7 @@ $newEntry = [
     'cantidad' => $cantidad,
     'operario' => $operario,
     'observaciones' => $observaciones,
+    'referenciaScanned' => $referenciaScanned,
     'timestamp' => $timestamp,
     'imagenes' => $imagePaths
 ];
