@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import CameraCapture from './components/CameraCapture'
+import QRCode from './components/QRCode'
 import LanguageSelector from './i18n/LanguageSelector'
 
 function App() {
@@ -67,6 +68,9 @@ function App() {
           <p>{t('footer.text')}</p>
         </div>
       </footer>
+
+      {/* QR Code Component */}
+      <QRCode />
     </div>
   )
 }

@@ -70,5 +70,10 @@
   "footer": {
     "text": "LogistiQ MVP © 2024"
   },
-  "language": "Language"
+  "language": "Language",
+  "qr": {
+    "title": "QR Code",
+    "description": "Scan this QR code to access the application",
+    "download": "📥 Download QR"
+  }
 }
