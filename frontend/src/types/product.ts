@@ -25,6 +25,24 @@ export interface APIResponse {
   details?: any
 }
 
+export type OCREngine =
+  | 'tesseract'
+  | 'easyocr'
+  | 'both'
+  | 'openai-vision'
+  | 'claude-vision'
+
+export interface APIKeyStatus {
+  openai: boolean
+  anthropic: boolean
+}
+
+export interface SaveAPIKeysRequest {
+  userId: string
+  openaiKey?: string
+  anthropicKey?: string
+}
+
 export interface CameraError {
   name: string
   message: string

@@ -24,7 +24,9 @@
     "engines": {
       "tesseract": "Tesseract (rápido)",
       "easyocr": "EasyOCR (preciso)",
-      "both": "Ambos"
+      "both": "Ambos",
+      "openaiVision": "OpenAI GPT-4 Vision (AI)",
+      "claudeVision": "Claude 3 Vision (AI)"
     }
   },
   "product": {
@@ -77,5 +79,20 @@
     "title": "Código QR",
     "description": "Escanea este código QR para acceder a la aplicación",
     "download": "📥 Descargar QR"
+  },
+  "settings": {
+    "apiKeys": "Configuración de API Keys",
+    "title": "Configuración",
+    "openaiKey": "OpenAI API Key (GPT-4 Vision)",
+    "anthropicKey": "Anthropic API Key (Claude 3)",
+    "saveKeys": "Guardar Keys",
+    "deleteKeys": "Eliminar Keys",
+    "keyConfigured": "✓ Configurada",
+    "keyNotConfigured": "No configurada",
+    "enterKey": "Ingresa tu API key",
+    "keySaved": "API keys guardadas correctamente",
+    "keyDeleted": "API keys eliminadas",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar tus API keys?",
+    "warning": "Las keys se guardan encriptadas en el servidor. No será posible recuperarlas después de eliminarlas."
   }
 }

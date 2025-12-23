@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { processImage } from '../services/api'
-import { APIResponse, CameraError } from '../types/product'
+import { APIResponse, CameraError, OCREngine } from '../types/product'
 import LoadingSpinner from './LoadingSpinner'
 import ProductResult from './ProductResult'
 
@@ -17,7 +17,7 @@ export default function CameraCapture() {
   const [result, setResult] = useState<APIResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<APIResponse | null>(null)
-  const [ocrEngine, setOcrEngine] = useState<'tesseract' | 'easyocr' | 'both'>('tesseract')
+  const [ocrEngine, setOcrEngine] = useState<OCREngine>('tesseract')
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [isVideoReady, setIsVideoReady] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
@@ -277,12 +277,14 @@ export default function CameraCapture() {
           <label className="text-sm font-medium text-gray-700">{t('camera.ocrEngine')}</label>
           <select
             value={ocrEngine}
-            onChange={(e) => setOcrEngine(e.target.value as any)}
+            onChange={(e) => setOcrEngine(e.target.value as OCREngine)}
             className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
           >
             <option value="tesseract">{t('camera.engines.tesseract')}</option>
             <option value="easyocr">{t('camera.engines.easyocr')}</option>
             <option value="both">{t('camera.engines.both')}</option>
+            <option value="openai-vision">{t('camera.engines.openaiVision')}</option>
+            <option value="claude-vision">{t('camera.engines.claudeVision')}</option>
           </select>
         </div>
 
@@ -334,7 +336,7 @@ export default function CameraCapture() {
       )}
 
       {/* Video Container */}
-      <div className="relative w-full bg-black aspect-video flex items-center justify-center overflow-hidden">
+      <div className="relative w-full bg-black flex items-center justify-center overflow-hidden" style={{ height: '40vh' }}>
         <video
           ref={videoRef}
           autoPlay
@@ -363,12 +365,14 @@ export default function CameraCapture() {
           <label className="whitespace-nowrap flex items-center">{t('camera.ocrEngine')}</label>
           <select
             value={ocrEngine}
-            onChange={(e) => setOcrEngine(e.target.value as any)}
+            onChange={(e) => setOcrEngine(e.target.value as OCREngine)}
             className="flex-1 px-2 py-1 border border-gray-600 rounded text-xs bg-gray-800 text-white"
           >
             <option value="tesseract">{t('camera.engines.tesseract')}</option>
             <option value="easyocr">{t('camera.engines.easyocr')}</option>
             <option value="both">{t('camera.engines.both')}</option>
+            <option value="openai-vision">{t('camera.engines.openaiVision')}</option>
+            <option value="claude-vision">{t('camera.engines.claudeVision')}</option>
           </select>
         </div>
 

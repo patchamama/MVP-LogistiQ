@@ -24,7 +24,9 @@
     "engines": {
       "tesseract": "Tesseract (fast)",
       "easyocr": "EasyOCR (accurate)",
-      "both": "Both"
+      "both": "Both",
+      "openaiVision": "OpenAI GPT-4 Vision (AI)",
+      "claudeVision": "Claude 3 Vision (AI)"
     }
   },
   "product": {
@@ -77,5 +79,20 @@
     "title": "QR Code",
     "description": "Scan this QR code to access the application",
     "download": "📥 Download QR"
+  },
+  "settings": {
+    "apiKeys": "API Keys Configuration",
+    "title": "Settings",
+    "openaiKey": "OpenAI API Key (GPT-4 Vision)",
+    "anthropicKey": "Anthropic API Key (Claude 3)",
+    "saveKeys": "Save Keys",
+    "deleteKeys": "Delete Keys",
+    "keyConfigured": "✓ Configured",
+    "keyNotConfigured": "Not configured",
+    "enterKey": "Enter your API key",
+    "keySaved": "API keys saved successfully",
+    "keyDeleted": "API keys deleted",
+    "deleteConfirm": "Are you sure you want to delete your API keys?",
+    "warning": "Keys are stored encrypted on the server. You will not be able to recover them after deletion."
   }
 }
