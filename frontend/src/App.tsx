@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import CameraCapture from './components/CameraCapture'
 import WarehouseEntry from './components/WarehouseEntry'
@@ -6,6 +6,8 @@ import QRCode from './components/QRCode'
 import VersionBanner from './components/VersionBanner'
 import LanguageSelector from './i18n/LanguageSelector'
 import APIKeySettings from './components/APIKeySettings'
+import OperarioModal from './components/OperarioModal'
+import { getOperarioName } from './utils/operarioStorage'
 
 type AppView = 'ocr' | 'warehouse'
 
@@ -13,9 +15,29 @@ function App() {
   const { t } = useTranslation()
   const [showSettings, setShowSettings] = useState(false)
   const [activeView, setActiveView] = useState<AppView>('warehouse')
+  const [showOperarioModal, setShowOperarioModal] = useState(false)
+  const [operario, setOperario] = useState('')
+
+  useEffect(() => {
+    // Al cargar la app, verificar si hay nombre de operario guardado
+    const savedOperario = getOperarioName()
+    if (savedOperario) {
+      setOperario(savedOperario)
+    } else {
+      // Si no hay nombre guardado, mostrar el modal
+      setShowOperarioModal(true)
+    }
+  }, [])
+
+  const handleOperarioConfirm = (name: string) => {
+    setOperario(name)
+    setShowOperarioModal(false)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <OperarioModal isOpen={showOperarioModal} onConfirm={handleOperarioConfirm} />
+
       <VersionBanner />
 
       <header className="bg-white shadow-sm">
@@ -23,8 +45,22 @@ function App() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t('header.title')}</h1>
             <p className="text-gray-600 mt-1">{t('header.subtitle')}</p>
+            {operario && (
+              <p className="text-sm text-blue-600 mt-2">
+                👤 Operario: <span className="font-semibold">{operario}</span>
+              </p>
+            )}
           </div>
           <div className="flex gap-2 items-center">
+            {operario && (
+              <button
+                onClick={() => setShowOperarioModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
+                title="Cambiar nombre del operario"
+              >
+                👤 Cambiar
+              </button>
+            )}
             <button
               onClick={() => setShowSettings(!showSettings)}
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm font-semibold"
@@ -101,7 +137,10 @@ function App() {
         {/* Warehouse View */}
         {activeView === 'warehouse' && (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <WarehouseEntry />
+            <WarehouseEntry
+              initialOperario={operario}
+              onOperarioChange={(newOperario) => setOperario(newOperario)}
+            />
           </div>
         )}
 

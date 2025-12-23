@@ -10,6 +10,7 @@ import {
 } from '../services/miniapi'
 import { processImageWithOCR } from '../services/ocr'
 import { getUserID } from '../utils/userID'
+import { saveOperarioName } from '../utils/operarioStorage'
 import LoadingSpinner from './LoadingSpinner'
 
 // Suppressing unused variable warnings for now
@@ -24,7 +25,12 @@ interface ReferenceCheckStatus {
   total_quantity?: number
 }
 
-export default function WarehouseEntry() {
+interface WarehouseEntryProps {
+  initialOperario?: string
+  onOperarioChange?: (operario: string) => void
+}
+
+export default function WarehouseEntry({ initialOperario = '', onOperarioChange }: WarehouseEntryProps) {
   const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -39,7 +45,7 @@ export default function WarehouseEntry() {
   const [fabricante, setFabricante] = useState('')
   const [nuevoFabricante, setNuevoFabricante] = useState('')
   const [cantidad, setCantidad] = useState(1)
-  const [operario, setOperario] = useState('')
+  const [operario, setOperario] = useState(initialOperario)
   const [observaciones, setObservaciones] = useState('')
   const [imagenes, setImagenes] = useState<string[]>([])
   const [manufacturers, setManufacturers] = useState<string[]>([])
@@ -357,11 +363,19 @@ export default function WarehouseEntry() {
     setError(null)
 
     try {
+      const operarioTrimmed = operario.trim()
+
+      // Guardar operario en localStorage y notificar al padre
+      saveOperarioName(operarioTrimmed)
+      if (onOperarioChange) {
+        onOperarioChange(operarioTrimmed)
+      }
+
       const entry: WarehouseEntry = {
         referencia: referencia.trim(),
         fabricante: finalFabricante,
         cantidad,
-        operario: operario.trim(),
+        operario: operarioTrimmed,
         observaciones: observaciones.trim(),
         imagenes,
         referenciaScanned: referencia.trim(),
