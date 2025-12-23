@@ -53,12 +53,17 @@ export default function CameraCapture() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().catch(err => {
-            console.error('Play error:', err)
-            setCameraError('Failed to start video playback')
-          })
-        }
+
+        // Wait a bit for the stream to be ready
+        setTimeout(() => {
+          if (videoRef.current) {
+            videoRef.current.play().catch(err => {
+              console.error('Play error:', err)
+              setCameraError('Failed to start video playback')
+            })
+          }
+        }, 100)
+
         setIsCameraActive(true)
       }
     } catch (err) {
@@ -214,14 +219,19 @@ export default function CameraCapture() {
       )}
 
       {/* Video Feed - 3/4 of screen */}
-      <div className="flex-1 flex items-center justify-center bg-black overflow-hidden">
+      <div className="flex-1 flex items-center justify-center bg-black overflow-hidden relative">
         <video
           ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="w-full h-full object-cover"
-          style={{ WebkitTransform: 'scaleX(-1)', transform: 'scaleX(-1)' }}
+          autoPlay={true}
+          playsInline={true}
+          muted={true}
+          controls={false}
+          className="absolute w-full h-full object-cover"
+          style={{
+            WebkitTransform: 'scaleX(-1)',
+            transform: 'scaleX(-1)',
+            WebkitAppearance: 'none',
+          }}
         />
         <canvas ref={canvasRef} className="hidden" />
       </div>
