@@ -58,11 +58,27 @@ else
 fi
 echo ""
 
-echo -e "${BLUE}[4/4]${NC} Setting proper permissions..."
+echo -e "${BLUE}[4/4]${NC} Updating version information..."
+# Create version.json with current timestamp
+CURRENT_VERSION=$(grep '"version":' "$PROJECT_ROOT/frontend/package.json" | sed 's/.*"version": "\([^"]*\)".*/\1/')
+CURRENT_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+
+# Create version.json in the deploy directory
+cat > "$DEPLOY_DIR/version.json" << EOF
+{
+  "version": "$CURRENT_VERSION",
+  "timestamp": "$CURRENT_TIMESTAMP"
+}
+EOF
+
+# Set proper permissions
 chmod -R 755 "$DEPLOY_DIR"/*.html 2>/dev/null || true
 chmod -R 755 "$DEPLOY_DIR"/assets 2>/dev/null || true
 chmod -R 755 "$DEPLOY_DIR"/sw.js 2>/dev/null || true
+chmod -R 755 "$DEPLOY_DIR"/version.json 2>/dev/null || true
 echo -e "${GREEN}✓ Permissions set${NC}"
+echo "  - App version: $CURRENT_VERSION"
+echo "  - Updated at: $CURRENT_TIMESTAMP"
 echo ""
 
 echo "================================"
@@ -71,6 +87,11 @@ echo "================================"
 echo ""
 echo "Your application is now live at:"
 echo -e "${GREEN}https://backend.patchamama.com/MVP-LogistiQ${NC}"
+echo ""
+echo "Version information:"
+echo "  • Current version: $CURRENT_VERSION"
+echo "  • Last updated: $CURRENT_TIMESTAMP"
+echo "  • Updates checked every 60 seconds"
 echo ""
 echo "You can now visit the above URL to see your deployed application."
 echo ""

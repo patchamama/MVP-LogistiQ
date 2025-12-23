@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import CameraCapture from './components/CameraCapture'
 import QRCode from './components/QRCode'
+import VersionBanner from './components/VersionBanner'
 import LanguageSelector from './i18n/LanguageSelector'
 
 function App() {
@@ -8,6 +9,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <VersionBanner />
+
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6 flex justify-between items-center">
           <div>
