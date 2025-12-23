@@ -187,3 +187,56 @@ export const checkHealth = async (): Promise<HealthResponse> => {
     throw error
   }
 }
+
+/**
+ * Procesar imagen con OCR (Claude → OpenAI con fallback)
+ *
+ * @param imageBase64 Imagen en formato base64
+ * @param claudeKey API key de Claude (opcional)
+ * @param openaiKey API key de OpenAI (opcional)
+ * @param language Idioma para extracción (default: es)
+ * @returns Código extraído y motor usado
+ */
+export interface OCRProcessResponse {
+  success: boolean
+  code: string | null
+  engine: string | null
+  raw_response?: string
+  error: string | null
+}
+
+export const processOCR = async (
+  imageBase64: string,
+  claudeKey?: string,
+  openaiKey?: string,
+  language = 'es'
+): Promise<OCRProcessResponse> => {
+  try {
+    const payload: any = {
+      image_base64: imageBase64,
+      language
+    }
+
+    // Incluir API keys si se proporcionan
+    if (claudeKey) payload.claude_api_key = claudeKey
+    if (openaiKey) payload.openai_api_key = openaiKey
+
+    const response = await axios.post<OCRProcessResponse>(
+      `${MINI_API_URL}/ocr/process`,
+      payload,
+      {
+        timeout: 60000 // 60 segundos para OCR
+      }
+    )
+
+    return response.data
+  } catch (error: any) {
+    console.error('OCR processing failed:', error)
+    return {
+      success: false,
+      code: null,
+      engine: null,
+      error: error.response?.data?.error || error.message || 'Unknown OCR error'
+    }
+  }
+}

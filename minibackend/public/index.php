@@ -95,6 +95,9 @@ switch (true) {
     case $method === 'GET' && $route === '/health':
         require HANDLERS_PATH . '/health.php';
         break;
+    case $method === 'POST' && $route === '/ocr/process':
+        require HANDLERS_PATH . '/ocr_process.php';
+        break;
     default:
         http_response_code(404);
         echo json_encode(['error' => 'Endpoint no encontrado']);

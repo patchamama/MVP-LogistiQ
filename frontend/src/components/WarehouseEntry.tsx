@@ -5,10 +5,10 @@ import {
   checkReference,
   getManufacturers,
   checkHealth,
+  processOCR,
   type WarehouseEntry,
   type OCREngine,
 } from '../services/miniapi'
-import { processImage } from '../services/api'
 import { getUserID } from '../utils/userID'
 import { decryptAPIKey } from '../utils/encryption'
 import LoadingSpinner from './LoadingSpinner'
@@ -229,17 +229,25 @@ export default function WarehouseEntry() {
         if (!referencia) {
           setGeneratingReference(true)
           try {
-            const userId = getUserID()
-            // Map miniapi engine names to api engine names
-            let apiEngine: any = ocrEngine
-            if (ocrEngine === 'openai') apiEngine = 'openai-vision'
-            if (ocrEngine === 'claude') apiEngine = 'claude-vision'
-            const response = await processImage(imageBase64.split(',')[1], apiEngine, userId)
-            if (response.success && response.ocr_result) {
-              setReferencia(response.ocr_result.filtered_code || response.ocr_result.raw_text)
+            const imageBase64Clean = imageBase64.split(',')[1]
+
+            // Obtener API keys desencriptadas
+            const claudeKey = decryptedKeys['claude'] || undefined
+            const openaiKey = decryptedKeys['openai'] || undefined
+
+            // Procesar con el nuevo endpoint OCR del MiniBACKEND
+            const response = await processOCR(imageBase64Clean, claudeKey, openaiKey)
+
+            if (response.success && response.code) {
+              setReferencia(response.code)
+              console.log(`✓ Código extraído con ${response.engine}: ${response.code}`)
+            } else {
+              console.error('OCR Error:', response.error)
+              setError(response.error || 'No se pudo extraer el código de la imagen')
             }
           } catch (err) {
             console.error('Error generating reference:', err)
+            setError('Error al procesar la imagen')
           } finally {
             setGeneratingReference(false)
           }
@@ -269,14 +277,20 @@ export default function WarehouseEntry() {
       if (!referencia) {
         setGeneratingReference(true)
         try {
-          const userId = getUserID()
-          // Map miniapi engine names to api engine names
-          let apiEngine: any = ocrEngine
-          if (ocrEngine === 'openai') apiEngine = 'openai-vision'
-          if (ocrEngine === 'claude') apiEngine = 'claude-vision'
-          const response = await processImage(imageBase64.split(',')[1], apiEngine, userId)
-          if (response.success && response.ocr_result) {
-            setReferencia(response.ocr_result.filtered_code || response.ocr_result.raw_text)
+          const imageBase64Clean = imageBase64.split(',')[1]
+
+          // Obtener API keys desencriptadas
+          const claudeKey = decryptedKeys['claude'] || undefined
+          const openaiKey = decryptedKeys['openai'] || undefined
+
+          // Procesar con el nuevo endpoint OCR del MiniBACKEND
+          const response = await processOCR(imageBase64Clean, claudeKey, openaiKey)
+
+          if (response.success && response.code) {
+            setReferencia(response.code)
+            console.log(`✓ Código extraído con ${response.engine}: ${response.code}`)
+          } else {
+            console.error('OCR Error:', response.error)
           }
         } catch (err) {
           console.error('Error generating reference:', err)
