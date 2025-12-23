@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import CameraCapture from './components/CameraCapture'
+import WarehouseEntry from './components/WarehouseEntry'
 import QRCode from './components/QRCode'
 import VersionBanner from './components/VersionBanner'
 import LanguageSelector from './i18n/LanguageSelector'
 import APIKeySettings from './components/APIKeySettings'
 
+type AppView = 'ocr' | 'warehouse'
+
 function App() {
   const { t } = useTranslation()
   const [showSettings, setShowSettings] = useState(false)
+  const [activeView, setActiveView] = useState<AppView>('ocr')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -54,18 +58,52 @@ function App() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">
-              {t('main.title')}
-            </h2>
-            <p className="text-gray-600 text-sm">
-              {t('main.description')}
-            </p>
-          </div>
-
-          <CameraCapture />
+        {/* Tabs */}
+        <div className="mb-6 flex gap-2 border-b border-gray-200">
+          <button
+            onClick={() => setActiveView('ocr')}
+            className={`px-4 py-2 font-semibold border-b-2 transition ${
+              activeView === 'ocr'
+                ? 'text-blue-600 border-blue-600'
+                : 'text-gray-600 border-transparent hover:text-gray-900'
+            }`}
+          >
+            📷 OCR
+          </button>
+          <button
+            onClick={() => setActiveView('warehouse')}
+            className={`px-4 py-2 font-semibold border-b-2 transition ${
+              activeView === 'warehouse'
+                ? 'text-blue-600 border-blue-600'
+                : 'text-gray-600 border-transparent hover:text-gray-900'
+            }`}
+          >
+            📦 Almacén
+          </button>
         </div>
+
+        {/* OCR View */}
+        {activeView === 'ocr' && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                {t('main.title')}
+              </h2>
+              <p className="text-gray-600 text-sm">
+                {t('main.description')}
+              </p>
+            </div>
+
+            <CameraCapture />
+          </div>
+        )}
+
+        {/* Warehouse View */}
+        {activeView === 'warehouse' && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <WarehouseEntry />
+          </div>
+        )}
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
