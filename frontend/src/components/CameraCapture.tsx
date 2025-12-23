@@ -29,93 +29,60 @@ export default function CameraCapture() {
     }
   }, [])
 
-  // Handle video play when camera becomes active
-  useEffect(() => {
-    if (!isCameraActive || !videoRef.current) return
-
-    const video = videoRef.current
-    const playVideo = async () => {
-      try {
-        // Ensure video is ready
-        if (video.srcObject && video.readyState >= 2) {
-          await video.play()
-          console.log('Video playback started')
-        } else {
-          // Wait a bit and try again
-          setTimeout(() => {
-            video.play().catch(err => console.error('Play error:', err))
-          }, 200)
-        }
-      } catch (err) {
-        console.error('Video play error:', err)
-        setCameraError('Failed to play video')
-      }
-    }
-
-    playVideo()
-
-    // Listen for canplay event as backup
-    const handleCanPlay = () => {
-      console.log('Video ready to play')
-      video.play().catch(err => console.error('Play on canplay error:', err))
-    }
-
-    video.addEventListener('canplay', handleCanPlay)
-    return () => video.removeEventListener('canplay', handleCanPlay)
-  }, [isCameraActive])
-
   const startCamera = useCallback(async () => {
     try {
       setError(null)
       setCameraError(null)
       console.log('Starting camera...')
 
-      // Check if device supports camera
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (!navigator.mediaDevices?.getUserMedia) {
         const msg = 'Camera not supported on this device'
         setCameraError(msg)
         console.error(msg)
         return
       }
 
-      // Try with basic constraints first
+      // Simple constraints - just request video
       const constraints = {
         video: {
-          facingMode: 'environment',
-          width: { min: 320, ideal: 1280, max: 1920 },
-          height: { min: 240, ideal: 720, max: 1080 }
+          facingMode: 'environment'
         },
         audio: false
       }
 
-      console.log('Requesting camera with constraints:', constraints)
+      console.log('Requesting camera...')
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
       console.log('Stream obtained:', stream)
 
       streamRef.current = stream
 
-      if (videoRef.current) {
-        console.log('Setting video srcObject')
-        videoRef.current.srcObject = stream
+      // Set camera active first
+      setIsCameraActive(true)
 
-        // Set the state after srcObject is set
-        setIsCameraActive(true)
-        console.log('Camera state set to active')
-      } else {
-        console.error('Video ref is null')
-        setCameraError('Video element not ready')
-      }
+      // Then set the stream with a small delay
+      setTimeout(() => {
+        if (videoRef.current && stream) {
+          console.log('Setting srcObject...')
+          videoRef.current.srcObject = stream
+
+          // Try to play
+          const playPromise = videoRef.current.play()
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => console.log('Video is playing'))
+              .catch(err => console.error('Play failed:', err))
+          }
+        }
+      }, 100)
     } catch (err) {
       const error = err as CameraError
-      console.error('Camera error details:', error)
+      console.error('Camera error:', error)
 
       const errorMessage = error.name === 'NotAllowedError'
-        ? 'Camera permission denied. Please allow camera access in settings.'
+        ? 'Camera permission denied'
         : error.name === 'NotFoundError'
-        ? 'No camera found on this device'
-        : error.name === 'SecurityError'
-        ? 'Camera access requires HTTPS'
-        : error.message || 'Unknown camera error'
+        ? 'No camera found'
+        : error.message
 
       setCameraError(errorMessage)
     }
@@ -125,10 +92,7 @@ export default function CameraCapture() {
     console.log('Stopping camera...')
 
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        console.log('Stopping track:', track.kind)
-        track.stop()
-      })
+      streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
 
@@ -139,25 +103,25 @@ export default function CameraCapture() {
 
     setIsCameraActive(false)
     setCameraError(null)
-    console.log('Camera stopped')
   }, [])
 
   const capturePhoto = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current) {
-      setCameraError('Camera or canvas not ready')
+    if (!videoRef.current?.videoWidth || !canvasRef.current) {
+      setCameraError('Camera not ready')
       return
     }
 
     try {
       const context = canvasRef.current.getContext('2d')
-      if (!context) {
-        setCameraError('Could not get canvas context')
-        return
-      }
+      if (!context) return
 
       canvasRef.current.width = videoRef.current.videoWidth
       canvasRef.current.height = videoRef.current.videoHeight
-      context.drawImage(videoRef.current, 0, 0)
+
+      // Mirror the video (flip horizontally)
+      context.scale(-1, 1)
+      context.drawImage(videoRef.current, -videoRef.current.videoWidth, 0)
+      context.scale(-1, 1) // Reset scale
 
       const imageBase64 = canvasRef.current.toDataURL('image/jpeg').split(',')[1]
 
@@ -166,17 +130,17 @@ export default function CameraCapture() {
 
       const response = await processImage(imageBase64, ocrEngine)
       setResult(response)
-      setIsLoading(false)
 
-      if (response.success) {
-        stopCamera()
+      if (!response.success) {
+        setError(response.message || null)
       }
     } catch (err) {
       console.error('Capture error:', err)
       setCameraError('Failed to capture photo')
+    } finally {
       setIsLoading(false)
     }
-  }, [ocrEngine, stopCamera])
+  }, [ocrEngine])
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -190,11 +154,11 @@ export default function CameraCapture() {
       const imageBase64 = (e.target?.result as string)?.split(',')[1] || ''
       const response = await processImage(imageBase64, ocrEngine)
       setResult(response)
-      setIsLoading(false)
 
       if (!response.success) {
         setError(response.message || null)
       }
+      setIsLoading(false)
     }
     reader.readAsDataURL(file)
   }, [ocrEngine])
@@ -214,6 +178,7 @@ export default function CameraCapture() {
   }
 
   if (!isCameraActive) {
+    // Controls view
     return (
       <div className="space-y-4">
         {error && (
@@ -261,14 +226,15 @@ export default function CameraCapture() {
     )
   }
 
+  // Camera active view
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+    <div className="w-full max-w-2xl mx-auto bg-black rounded-lg overflow-hidden">
       {/* Camera Header */}
-      <div className="bg-gray-900 text-white p-4 flex justify-between items-center h-16">
-        <h3 className="font-semibold">{t('camera.title')}</h3>
+      <div className="bg-gray-900 text-white p-3 flex justify-between items-center">
+        <h3 className="font-semibold text-sm">{t('camera.title')}</h3>
         <button
           onClick={stopCamera}
-          className="text-2xl hover:text-red-400 transition"
+          className="text-xl hover:text-red-400 transition"
         >
           ✕
         </button>
@@ -276,41 +242,45 @@ export default function CameraCapture() {
 
       {/* Camera Error */}
       {cameraError && (
-        <div className="bg-red-600 text-white p-4 text-center font-semibold text-sm">
+        <div className="bg-red-600 text-white p-3 text-center font-semibold text-sm">
           {cameraError}
         </div>
       )}
 
-      {/* Video Feed - 3/4 of screen */}
-      <div className="flex-1 bg-black relative overflow-hidden">
+      {/* Video Container */}
+      <div className="relative w-full bg-black aspect-video flex items-center justify-center overflow-hidden">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
+          disablePictureInPicture
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
             width: '100%',
             height: '100%',
             objectFit: 'cover',
+            display: 'block',
             transform: 'scaleX(-1)',
             WebkitTransform: 'scaleX(-1)',
-          } as React.CSSProperties}
+          }}
         />
+        {!videoRef.current?.srcObject && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-white text-center">Initializing camera...</p>
+          </div>
+        )}
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
-      {/* Controls - 1/4 of screen */}
-      <div className="bg-gray-900 text-white p-4 space-y-3 h-auto">
+      {/* Controls Footer */}
+      <div className="bg-gray-900 text-white p-3 space-y-2">
         {/* Engine Selector */}
-        <div className="flex gap-2">
-          <label className="text-sm font-medium flex items-center whitespace-nowrap">{t('camera.ocrEngine')}</label>
+        <div className="flex gap-2 text-sm">
+          <label className="whitespace-nowrap flex items-center">{t('camera.ocrEngine')}</label>
           <select
             value={ocrEngine}
             onChange={(e) => setOcrEngine(e.target.value as any)}
-            className="flex-1 px-3 py-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-white"
+            className="flex-1 px-2 py-1 border border-gray-600 rounded text-xs bg-gray-800 text-white"
           >
             <option value="tesseract">{t('camera.engines.tesseract')}</option>
             <option value="easyocr">{t('camera.engines.easyocr')}</option>
@@ -322,13 +292,13 @@ export default function CameraCapture() {
         <div className="flex gap-2">
           <button
             onClick={capturePhoto}
-            className="flex-1 py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-base"
+            className="flex-1 py-2 px-3 bg-green-600 text-white rounded hover:bg-green-700 transition font-semibold text-sm"
           >
             📸 {t('camera.capture')}
           </button>
           <button
             onClick={stopCamera}
-            className="flex-1 py-3 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-base"
+            className="flex-1 py-2 px-3 bg-red-600 text-white rounded hover:bg-red-700 transition font-semibold text-sm"
           >
             ✕ {t('camera.cancel')}
           </button>
