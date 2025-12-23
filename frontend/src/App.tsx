@@ -12,7 +12,7 @@ type AppView = 'ocr' | 'warehouse'
 function App() {
   const { t } = useTranslation()
   const [showSettings, setShowSettings] = useState(false)
-  const [activeView, setActiveView] = useState<AppView>('ocr')
+  const [activeView, setActiveView] = useState<AppView>('warehouse')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

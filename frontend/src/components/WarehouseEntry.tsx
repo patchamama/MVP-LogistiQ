@@ -54,6 +54,7 @@ export default function WarehouseEntry() {
   const [error, setError] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<any>(null)
   const [showErrorModal, setShowErrorModal] = useState(false)
+  const [cameraMode, setCameraMode] = useState<'label' | 'photos' | null>(null)
 
   // Estados de generación de referencia
   const [generatingReference, setGeneratingReference] = useState(false)
@@ -82,11 +83,12 @@ export default function WarehouseEntry() {
     }
   }
 
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (mode: 'label' | 'photos' = 'label') => {
     try {
       setError(null)
       setCameraError(null)
       setIsVideoReady(false)
+      setCameraMode(mode)
 
       if (!navigator.mediaDevices?.getUserMedia) {
         setCameraError('Cámara no disponible en este dispositivo')
@@ -151,6 +153,7 @@ export default function WarehouseEntry() {
     setIsCameraActive(false)
     setCameraError(null)
     setIsVideoReady(false)
+    setCameraMode(null)
   }, [])
 
   const capturePhoto = useCallback(async () => {
@@ -169,30 +172,33 @@ export default function WarehouseEntry() {
       context.drawImage(videoRef.current, 0, 0)
       const imageBase64 = canvasRef.current.toDataURL('image/jpeg')
 
-      // Intentar extraer referencia con OCR si no la tenemos
-      if (!referencia) {
-        setGeneratingReference(true)
-        try {
-          const userId = getUserID()
-          const response = await processImage(imageBase64.split(',')[1], 'tesseract', userId)
-          if (response.success && response.ocr_result) {
-            setReferencia(response.ocr_result.filtered_code || response.ocr_result.raw_text)
+      if (cameraMode === 'label') {
+        // Modo captura de etiqueta: extraer referencia con OCR
+        if (!referencia) {
+          setGeneratingReference(true)
+          try {
+            const userId = getUserID()
+            const response = await processImage(imageBase64.split(',')[1], 'tesseract', userId)
+            if (response.success && response.ocr_result) {
+              setReferencia(response.ocr_result.filtered_code || response.ocr_result.raw_text)
+            }
+          } catch (err) {
+            console.error('Error generating reference:', err)
+          } finally {
+            setGeneratingReference(false)
           }
-        } catch (err) {
-          console.error('Error generating reference:', err)
-        } finally {
-          setGeneratingReference(false)
         }
+        stopCamera()
+      } else if (cameraMode === 'photos') {
+        // Modo captura de fotos adicionales
+        setImagenes(prev => [...prev, imageBase64])
+        stopCamera()
       }
-
-      // Agregar imagen
-      setImagenes(prev => [...prev, imageBase64])
-      stopCamera()
     } catch (err) {
       console.error('Capture error:', err)
       setCameraError('Error al capturar foto')
     }
-  }, [referencia])
+  }, [referencia, cameraMode])
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -336,6 +342,67 @@ export default function WarehouseEntry() {
 
   // Paso 1: Escanear etiqueta
   if (step === 'scan') {
+    // Si está activa la cámara en modo etiqueta, mostrar visor
+    if (isCameraActive && cameraMode === 'label') {
+      return (
+        <div ref={containerRef} className="w-full max-w-2xl mx-auto bg-black rounded-lg overflow-hidden">
+          <div className="bg-gray-900 text-white p-3 flex justify-between items-center">
+            <h3 className="font-semibold text-sm">Capturar Etiqueta</h3>
+            <button onClick={stopCamera} className="text-xl hover:text-red-400 transition">
+              ✕
+            </button>
+          </div>
+
+          {cameraError && (
+            <div className="bg-red-600 text-white p-3 text-center font-semibold text-sm">{cameraError}</div>
+          )}
+
+          <div
+            className="relative w-full bg-black flex items-center justify-center overflow-hidden"
+            style={{ height: '40vh' }}
+          >
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              disablePictureInPicture
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+            {!isVideoReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <p className="text-white text-center">Inicializando cámara...</p>
+              </div>
+            )}
+            <canvas ref={canvasRef} className="hidden" />
+          </div>
+
+          <div className="bg-gray-900 text-white p-3 space-y-2">
+            <div className="flex gap-2">
+              <button
+                onClick={capturePhoto}
+                disabled={!isVideoReady || generatingReference}
+                className="flex-1 py-2 px-3 bg-green-600 text-white rounded hover:bg-green-700 transition font-semibold text-sm disabled:bg-gray-400"
+              >
+                📸 {generatingReference ? 'Procesando...' : 'Capturar'}
+              </button>
+              <button
+                onClick={stopCamera}
+                className="flex-1 py-2 px-3 bg-red-600 text-white rounded hover:bg-red-700 transition font-semibold text-sm"
+              >
+                ✕ Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div ref={containerRef} className="space-y-4">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -370,7 +437,7 @@ export default function WarehouseEntry() {
           </label>
 
           <button
-            onClick={startCamera}
+            onClick={() => startCamera('label')}
             disabled={generatingReference}
             className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:bg-gray-400"
           >
@@ -510,7 +577,7 @@ export default function WarehouseEntry() {
 
         <div className="space-y-2">
           <button
-            onClick={startCamera}
+            onClick={() => startCamera('photos')}
             className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
           >
             📷 Capturar Foto
