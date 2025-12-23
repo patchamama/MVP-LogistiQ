@@ -15,6 +15,16 @@ export interface OCRResult {
   engine_used: string
 }
 
+export interface ErrorDetails {
+  url?: string
+  method?: string
+  statusCode?: number | string
+  errorCode?: string
+  timestamp?: string
+  userAgent?: string
+  [key: string]: any
+}
+
 export interface APIResponse {
   success: boolean
   ocr_result?: OCRResult
@@ -22,7 +32,7 @@ export interface APIResponse {
   error?: string
   message?: string
   statusCode?: number | string
-  details?: any
+  details?: ErrorDetails | any
 }
 
 export type OCREngine =

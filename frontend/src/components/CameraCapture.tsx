@@ -5,6 +5,7 @@ import { APIResponse, CameraError, OCREngine } from '../types/product'
 import { getUserID } from '../utils/userID'
 import LoadingSpinner from './LoadingSpinner'
 import ProductResult from './ProductResult'
+import ErrorDetailsModal from './ErrorDetailsModal'
 
 export default function CameraCapture() {
   const { t } = useTranslation()
@@ -19,6 +20,7 @@ export default function CameraCapture() {
   const [result, setResult] = useState<APIResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<APIResponse | null>(null)
+  const [showErrorModal, setShowErrorModal] = useState(false)
   const [ocrEngine, setOcrEngine] = useState<OCREngine>('tesseract')
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [isVideoReady, setIsVideoReady] = useState(false)
@@ -211,16 +213,8 @@ export default function CameraCapture() {
   }, [])
 
   const showErrorDetails = useCallback(() => {
-    if (!errorDetails) return
-
-    const statusCode = errorDetails.statusCode || 'Unknown'
-    const message = errorDetails.message || 'Sin mensaje'
-    const details = errorDetails.details ? JSON.stringify(errorDetails.details, null, 2) : 'Sin detalles adicionales'
-
-    const errorMessage = `🔴 ERROR HTTP ${statusCode}\n\n📝 Mensaje:\n${message}\n\n📋 Detalles:\n${details}`
-
-    alert(errorMessage)
-  }, [errorDetails])
+    setShowErrorModal(true)
+  }, [])
 
   if (isLoading) {
     return <LoadingSpinner />
@@ -237,10 +231,17 @@ export default function CameraCapture() {
         {error && (
           <div
             onClick={showErrorDetails}
-            className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm cursor-pointer hover:bg-red-100 transition"
-            title="Click para ver detalles completos del error"
+            className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm cursor-pointer hover:bg-red-100 transition space-y-2"
+            title="Haz click para ver detalles completos del error"
           >
-            {error}
+            <div className="font-semibold">❌ {error}</div>
+            <div className="text-xs text-red-600">
+              Código HTTP: {errorDetails?.statusCode || 'Unknown'} |
+              Error Code: {errorDetails?.details?.errorCode || 'UNKNOWN'}
+            </div>
+            <div className="text-xs text-red-600">
+              🔍 Haz click aquí para ver detalles completos (URL, logs, etc.)
+            </div>
           </div>
         )}
 
@@ -277,10 +278,17 @@ export default function CameraCapture() {
         {error && (
           <div
             onClick={showErrorDetails}
-            className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm cursor-pointer hover:bg-red-100 transition"
-            title="Click para ver detalles completos del error"
+            className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm cursor-pointer hover:bg-red-100 transition space-y-2"
+            title="Haz click para ver detalles completos del error"
           >
-            {error}
+            <div className="font-semibold">❌ {error}</div>
+            <div className="text-xs text-red-600">
+              Código HTTP: {errorDetails?.statusCode || 'Unknown'} |
+              Error Code: {errorDetails?.details?.errorCode || 'UNKNOWN'}
+            </div>
+            <div className="text-xs text-red-600">
+              🔍 Haz click aquí para ver detalles completos (URL, logs, etc.)
+            </div>
           </div>
         )}
 
@@ -404,5 +412,14 @@ export default function CameraCapture() {
         </div>
       </div>
     </div>
+
+    {/* Error Details Modal */}
+    {showErrorModal && (
+      <ErrorDetailsModal
+        error={errorDetails}
+        onClose={() => setShowErrorModal(false)}
+        isOpen={showErrorModal}
+      />
+    )}
   )
 }

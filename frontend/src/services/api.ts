@@ -27,7 +27,20 @@ export const processImage = async (
       const statusCode = error.response?.status || 'Unknown'
       const errorData = error.response?.data as any
       const errorMessage = errorData?.message || 'Error al procesar la imagen'
-      const errorDetails = errorData?.details || errorData?.error || null
+      const backendDetails = errorData?.details || null
+
+      // Capturar información completa del error para debugging
+      const errorDetails = {
+        url: error.config?.url || `${API_BASE_URL}/ocr/process`,
+        method: error.config?.method?.toUpperCase() || 'POST',
+        statusCode: statusCode,
+        errorCode: errorData?.error || errorData?.code || 'UNKNOWN_ERROR',
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        backendMessage: errorMessage,
+        backendDetails: backendDetails,
+        axiosError: error.message
+      }
 
       return {
         success: false,
@@ -37,12 +50,24 @@ export const processImage = async (
         details: errorDetails
       }
     }
+
+    // Error de red u otro error
+    const errorDetails = {
+      url: `${API_BASE_URL}/ocr/process`,
+      method: 'POST',
+      statusCode: 'Network Error',
+      errorCode: 'NETWORK_ERROR',
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      message: error instanceof Error ? error.message : 'Error desconocido'
+    }
+
     return {
       success: false,
       error: 'Error desconocido',
       message: 'Ocurrió un error al procesar la solicitud',
       statusCode: 'Network Error',
-      details: null
+      details: errorDetails
     }
   }
 }
