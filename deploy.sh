@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Deploy script for MVP-LogistiQ frontend
+# Usage: ./deploy.sh
+# This script pulls the latest changes and deploys the frontend to the web server
+
+set -e
+
+echo "================================"
+echo "MVP-LogistiQ Deployment Script"
+echo "================================"
+echo ""
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Get the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR"
+FRONTEND_DIST="$PROJECT_ROOT/frontend/dist"
+DEPLOY_DIR="$PROJECT_ROOT"
+
+echo -e "${BLUE}[1/4]${NC} Pulling latest changes from GitHub..."
+cd "$PROJECT_ROOT"
+git pull origin main
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Git pull completed successfully${NC}"
+else
+    echo -e "${YELLOW}✗ Git pull failed${NC}"
+    exit 1
+fi
+echo ""
+
+echo -e "${BLUE}[2/4]${NC} Checking if dist folder exists..."
+if [ ! -d "$FRONTEND_DIST" ]; then
+    echo -e "${YELLOW}✗ Dist folder not found at $FRONTEND_DIST${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Dist folder found${NC}"
+echo ""
+
+echo -e "${BLUE}[3/4]${NC} Copying frontend assets to web root..."
+# Copy all files from frontend/dist to the project root (web accessible folder)
+cp -r "$FRONTEND_DIST"/* "$DEPLOY_DIR/"
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Files copied successfully${NC}"
+    echo "  - index.html"
+    echo "  - assets/"
+    echo "  - manifest.webmanifest"
+    echo "  - sw.js"
+    echo "  - workbox-*.js"
+else
+    echo -e "${YELLOW}✗ Copy operation failed${NC}"
+    exit 1
+fi
+echo ""
+
+echo -e "${BLUE}[4/4]${NC} Setting proper permissions..."
+chmod -R 755 "$DEPLOY_DIR"/*.html 2>/dev/null || true
+chmod -R 755 "$DEPLOY_DIR"/assets 2>/dev/null || true
+chmod -R 755 "$DEPLOY_DIR"/sw.js 2>/dev/null || true
+echo -e "${GREEN}✓ Permissions set${NC}"
+echo ""
+
+echo "================================"
+echo -e "${GREEN}✓ Deployment completed successfully!${NC}"
+echo "================================"
+echo ""
+echo "Your application is now live at:"
+echo -e "${GREEN}https://backend.patchamama.com/MVP-LogistiQ${NC}"
+echo ""
+echo "You can now visit the above URL to see your deployed application."
+echo ""
