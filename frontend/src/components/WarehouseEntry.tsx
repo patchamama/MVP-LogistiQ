@@ -10,6 +10,7 @@ import {
 } from '../services/miniapi'
 import { processImage } from '../services/api'
 import { getUserID } from '../utils/userID'
+import { decryptAPIKey } from '../utils/encryption'
 import LoadingSpinner from './LoadingSpinner'
 
 // Suppressing unused variable warnings for now
@@ -64,6 +65,11 @@ export default function WarehouseEntry() {
   // Estados de OCR
   const [ocrEngine, setOcrEngine] = useState<string>('tesseract')
   const [availableEngines, setAvailableEngines] = useState<OCREngine[]>([])
+
+  // Estados de encriptación
+  const [encryptionEnabled, setEncryptionEnabled] = useState(false)
+  const [encryptionKey, setEncryptionKey] = useState<string>('')
+  const [decryptedKeys, setDecryptedKeys] = useState<{ [key: string]: string }>({})
 
   // Cargar fabricantes y engines OCR al montar
   useEffect(() => {
