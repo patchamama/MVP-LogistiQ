@@ -45,10 +45,16 @@ function encrypt(plaintext, keyHex) {
   return btoa(combined);
 }
 
-// 1. Generar clave de encriptación
-console.log('[1/3] Generando clave de encriptación...');
-const encryptionKey = generateKey(32);
-console.log('✓ Clave generada: ' + encryptionKey + '\n');
+// 1. Generar o usar clave de encriptación existente
+console.log('[1/3] Preparando clave de encriptación...');
+let encryptionKey;
+if (process.env.ENCRYPTION_KEY) {
+  encryptionKey = process.env.ENCRYPTION_KEY;
+  console.log('✓ Usando clave existente desde ENCRYPTION_KEY\n');
+} else {
+  encryptionKey = generateKey(32);
+  console.log('✓ Nueva clave generada: ' + encryptionKey + '\n');
+}
 
 // 2. Encriptar API key de OpenAI
 // Leer desde variable de entorno OPENAI_API_KEY
@@ -116,7 +122,7 @@ console.log('===========================================\n');
 
 console.log('Resumen:');
 console.log('  - Clave de encriptación: ' + encryptionKey);
-console.log('  - OpenAI API Key: Encriptada ✓');
+console.log('  - OpenAI API Key: ' + (openaiKey ? 'Encriptada ✓' : 'No configurada ⚠️'));
 console.log('  - Archivo: minibackend/config.php');
 console.log('  - Versión: 0.8.0\n');
 
@@ -124,6 +130,11 @@ console.log('⚠️  IMPORTANTE:');
 console.log('  - Agregar config.php a .gitignore');
 console.log('  - No compartir la clave de encriptación');
 console.log('  - Verificar permisos: chmod 600 config.php\n');
+
+console.log('📝 Para usar una clave de encriptación existente:');
+console.log('  export ENCRYPTION_KEY="b324431e..."');
+console.log('  export OPENAI_API_KEY="sk-proj-..."');
+console.log('  node setup-config.js\n');
 
 // Función para exportar variables en formato PHP
 function phpExportVar(obj, indent = 0) {

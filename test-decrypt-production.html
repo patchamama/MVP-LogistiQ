@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Desencriptación - Production Config</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error { border-left-color: #f44336; }
+        h2 { margin-top: 0; color: #333; }
+        pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .success { color: #4CAF50; font-weight: bold; }
+        .error-text { color: #f44336; font-weight: bold; }
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 Test de Desencriptación - Configuración Production</h1>
+
+    <div class="container">
+        <h2>Datos de Production (desde /api/health)</h2>
+        <p><strong>Nota:</strong> Actualiza los valores abajo con los datos reales de tu API health endpoint</p>
+        <label>Encryption Key (hex):</label>
+        <textarea id="encryptionKeyInput" placeholder="Pega aquí la encryption_key del /api/health">e2fc2fd87dd8723c0c2cb63cf8fed51f44925269958bb15058ac05e12fea9acd</textarea>
+        <label>Encrypted OpenAI Key (base64):</label>
+        <textarea id="encryptedKeyInput" placeholder="Pega aquí la api_key_encrypted del /api/health"></textarea>
+        <label>Expected API Key (para verificación):</label>
+        <textarea id="expectedKeyInput" placeholder="Pega aquí tu API key real de OpenAI para verificar que la desencriptación es correcta (opcional)"></textarea>
+    </div>
+
+    <div class="container">
+        <h2>🧪 Intentar Desencriptación</h2>
+        <button onclick="testDecryption()">Probar Desencriptación</button>
+        <div id="result"></div>
+    </div>
+
+    <div class="container" id="configContainer" style="display: none;">
+        <h2>✅ config.php Generado</h2>
+        <p>Copia este contenido al archivo <code>minibackend/config.php</code> en el servidor:</p>
+        <pre id="configContent"></pre>
+        <button onclick="copyToClipboard()">Copiar al Portapapeles</button>
+    </div>
+
+    <script>
+        function decryptAPIKey(encryptedData, encryptionKey, isEncrypted) {
+            if (!isEncrypted || !encryptedData) {
+                return encryptedData;
+            }
+
+            try {
+                // 1. Decodificar base64 principal
+                let decoded;
+                try {
+                    decoded = atob(encryptedData);
+                } catch (e) {
+                    throw new Error('Invalid base64 format in encrypted data');
+                }
+
+                // 2. Separar IV (hex) y datos encriptados
+                const parts = decoded.split('::', 2);
+                if (parts.length !== 2) {
+                    throw new Error('Invalid cipher format - expected IV::encrypted');
+                }
+
+                const [ivHex, encryptedPayload] = parts;
+
+                // 3. Convertir IV de hex a WordArray
+                let iv;
+                try {
+                    iv = CryptoJS.enc.Hex.parse(ivHex);
+                } catch (e) {
+                    throw new Error('Invalid IV format');
+                }
+
+                // 4. Convertir key de hex a WordArray
+                let key;
+                try {
+                    key = CryptoJS.enc.Hex.parse(encryptionKey);
+                } catch (e) {
+                    throw new Error('Invalid encryption key format');
+                }
+
+                // 5. Desencriptar
+                const decrypted = CryptoJS.AES.decrypt(encryptedPayload, key, {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+
+                // 6. Convertir resultado a string UTF-8
+                const plaintext = decrypted.toString(CryptoJS.enc.Utf8);
+
+                if (!plaintext) {
+                    throw new Error('Decryption resulted in empty string - invalid key or corrupted data');
+                }
+
+                return plaintext;
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to decrypt API key: ${message}`);
+            }
+        }
+
+        function testDecryption() {
+            const resultDiv = document.getElementById('result');
+            const configContainer = document.getElementById('configContainer');
+
+            // Get values from textareas
+            const encryptionKey = document.getElementById('encryptionKeyInput').value.trim();
+            const encryptedOpenAI = document.getElementById('encryptedKeyInput').value.trim();
+            const expectedKey = document.getElementById('expectedKeyInput').value.trim();
+
+            // Validate inputs
+            if (!encryptionKey) {
+                resultDiv.innerHTML = `
+                    <div class="container error">
+                        <h3 class="error-text">⚠️ Datos Incompletos</h3>
+                        <p>Por favor ingresa la Encryption Key del /api/health</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (!encryptedOpenAI) {
+                resultDiv.innerHTML = `
+                    <div class="container error">
+                        <h3 class="error-text">⚠️ Datos Incompletos</h3>
+                        <p>Por favor ingresa la Encrypted OpenAI Key del /api/health</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                console.log('🔍 Intentando desencriptar...');
+                const decrypted = decryptAPIKey(encryptedOpenAI, encryptionKey, true);
+
+                console.log('✓ Desencriptación exitosa');
+                console.log('Resultado:', decrypted);
+
+                let htmlResult = `
+                    <div class="success">
+                        <h3>✅ ¡Desencriptación Correcta!</h3>
+                        <p>La API key se desencriptó exitosamente.</p>
+                        <p><strong>Clave desencriptada:</strong></p>
+                        <pre>${decrypted}</pre>
+                `;
+
+                // If expected key provided, verify it matches
+                if (expectedKey) {
+                    console.log('Esperado:', expectedKey);
+                    console.log('¿Coinciden?', decrypted === expectedKey);
+
+                    if (decrypted === expectedKey) {
+                        htmlResult += '<p>✓ La clave desencriptada coincide con la esperada</p>';
+                    } else {
+                        htmlResult = `
+                            <div class="container error">
+                                <h3 class="error-text">⚠️ Desencriptación Exitosa Pero Datos No Coinciden</h3>
+                                <p>La desencriptación funcionó, pero el resultado no coincide con la clave esperada.</p>
+                                <p><strong>Esperado:</strong></p>
+                                <pre>${expectedKey}</pre>
+                                <p><strong>Obtenido:</strong></p>
+                                <pre>${decrypted}</pre>
+                                <p><strong>Esto significa:</strong></p>
+                                <ul>
+                                    <li>El encryption_key es correcto</li>
+                                    <li>El api_key_encrypted corresponde a una API key diferente</li>
+                                    <li>Verifica que estés usando las credenciales correctas</li>
+                                </ul>
+                            </div>
+                        `;
+                        resultDiv.innerHTML = htmlResult;
+                        return;
+                    }
+                } else {
+                    htmlResult += '<p>ℹ️ No se proporcionó clave esperada para verificación</p>';
+                }
+
+                htmlResult += '</div>';
+                resultDiv.innerHTML = htmlResult;
+
+                // Generar config.php
+                generateConfigPHP(encryptionKey, encryptedOpenAI);
+                configContainer.style.display = 'block';
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="container error">
+                        <h3 class="error-text">❌ Error de Desencriptación</h3>
+                        <p>${error.message}</p>
+                        <p>Esto indica un problema con:</p>
+                        <ul>
+                            <li>La encryption_key no es correcta</li>
+                            <li>La api_key_encrypted está corrupta</li>
+                            <li>El formato base64 es inválido</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        function generateConfigPHP(encryptionKey, encryptedOpenAI) {
+            const config = `<?php
+/**
+ * config.php - Archivo de configuración generado automáticamente
+ * Fecha: ${new Date().toISOString()}
+ * IMPORTANTE: Este archivo NO debe commitearse - está en .gitignore
+ */
+return [
+  'encryption' => [
+    'enabled' => true,
+    'key' => '${encryptionKey}'
+  ],
+  'ocr' => [
+    'engines' => [
+      'tesseract' => [
+        'enabled' => true,
+        'requires_key' => false
+      ],
+      'easyocr' => [
+        'enabled' => true,
+        'requires_key' => false
+      ],
+      'openai' => [
+        'enabled' => true,
+        'requires_key' => true,
+        'api_key_encrypted' => '${encryptedOpenAI}'
+      ],
+      'claude' => [
+        'enabled' => false,
+        'requires_key' => true,
+        'api_key_encrypted' => ''
+      ]
+    ]
+  ],
+  'app' => [
+    'version' => '0.8.0',
+    'name' => 'LogistiQ MiniBACKEND'
+  ]
+];
+`;
+            document.getElementById('configContent').textContent = config;
+        }
+
+        function copyToClipboard() {
+            const configContent = document.getElementById('configContent');
+            const text = configContent.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✓ config.php copiado al portapapeles');
+            }).catch(err => {
+                alert('Error al copiar: ' + err);
+            });
+        }
+
+        // No auto-run - user must manually click the button and enter data
+    </script>
+</body>
+</html>
