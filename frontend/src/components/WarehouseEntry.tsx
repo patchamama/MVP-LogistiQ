@@ -5,12 +5,11 @@ import {
   checkReference,
   getManufacturers,
   checkHealth,
-  processOCR,
   type WarehouseEntry,
   type OCREngine,
 } from '../services/miniapi'
+import { processImageWithOCR } from '../services/ocr'
 import { getUserID } from '../utils/userID'
-import { decryptAPIKey } from '../utils/encryption'
 import LoadingSpinner from './LoadingSpinner'
 
 // Suppressing unused variable warnings for now
@@ -69,7 +68,7 @@ export default function WarehouseEntry() {
   // Estados de encriptación
   const [encryptionEnabled, setEncryptionEnabled] = useState(false)
   const [encryptionKey, setEncryptionKey] = useState<string>('')
-  const [decryptedKeys, setDecryptedKeys] = useState<{ [key: string]: string }>({})
+  const [encryptedKeys, setEncryptedKeys] = useState<{ [key: string]: string }>({})
 
   // Cargar fabricantes y engines OCR al montar
   useEffect(() => {
@@ -112,23 +111,15 @@ export default function WarehouseEntry() {
         setEncryptionEnabled(health.encryption_enabled)
         setEncryptionKey(health.encryption_key)
 
-        // Desencriptar keys disponibles
-        const keys: { [key: string]: string } = {}
+        // Guardar keys encriptadas (se desencriptarán en el frontend cuando se necesite)
+        const encryptedKeysMap: { [key: string]: string } = {}
         for (const engine of health.ocr_engines || []) {
           if (engine.api_key_encrypted) {
-            try {
-              keys[engine.name] = decryptAPIKey(
-                engine.api_key_encrypted,
-                health.encryption_key,
-                health.encryption_enabled
-              )
-              console.log(`✓ API Key de ${engine.name} desencriptada`)
-            } catch (err) {
-              console.error(`Error desencriptando key de ${engine.name}:`, err)
-            }
+            encryptedKeysMap[engine.name] = engine.api_key_encrypted
+            console.log(`✓ API Key encriptada de ${engine.name} cargada`)
           }
         }
-        setDecryptedKeys(keys)
+        setEncryptedKeys(encryptedKeysMap)
       }
     } catch (err) {
       console.error('Error cargando motores OCR:', err)
@@ -231,12 +222,13 @@ export default function WarehouseEntry() {
           try {
             const imageBase64Clean = imageBase64.split(',')[1]
 
-            // Obtener API keys desencriptadas
-            const claudeKey = decryptedKeys['claude'] || undefined
-            const openaiKey = decryptedKeys['openai'] || undefined
-
-            // Procesar con el nuevo endpoint OCR del MiniBACKEND
-            const response = await processOCR(imageBase64Clean, claudeKey, openaiKey)
+            // Procesar imagen con OCR del frontend (Claude → OpenAI)
+            const response = await processImageWithOCR(
+              imageBase64Clean,
+              encryptedKeys['claude'],
+              encryptedKeys['openai'],
+              encryptionKey
+            )
 
             if (response.success && response.code) {
               setReferencia(response.code)
@@ -279,12 +271,13 @@ export default function WarehouseEntry() {
         try {
           const imageBase64Clean = imageBase64.split(',')[1]
 
-          // Obtener API keys desencriptadas
-          const claudeKey = decryptedKeys['claude'] || undefined
-          const openaiKey = decryptedKeys['openai'] || undefined
-
-          // Procesar con el nuevo endpoint OCR del MiniBACKEND
-          const response = await processOCR(imageBase64Clean, claudeKey, openaiKey)
+          // Procesar imagen con OCR del frontend (Claude → OpenAI)
+          const response = await processImageWithOCR(
+            imageBase64Clean,
+            encryptedKeys['claude'],
+            encryptedKeys['openai'],
+            encryptionKey
+          )
 
           if (response.success && response.code) {
             setReferencia(response.code)
@@ -521,7 +514,7 @@ export default function WarehouseEntry() {
               {/* Indicador de estado de API key */}
               {(ocrEngine === 'openai' || ocrEngine === 'claude') && (
                 <div className="mt-2 text-xs flex items-center gap-1">
-                  {decryptedKeys[ocrEngine] ? (
+                  {encryptedKeys[ocrEngine] ? (
                     <span className="text-green-600 font-semibold">✓ API Key configurada</span>
                   ) : (
                     <span className="text-red-600 font-semibold">⚠️ API Key no configurada</span>
