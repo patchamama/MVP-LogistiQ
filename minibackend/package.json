@@ -1,0 +1,15 @@
+{
+  "name": "minibackend",
+  "version": "1.0.0",
+  "description": "Sistema minimalista para gestionar la entrada de piezas al almacén con almacenamiento permanente de imágenes y registro de metadatos.",
+  "main": "setup-config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "crypto-js": "^4.2.0"
+  }
+}

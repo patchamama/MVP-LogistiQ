@@ -64,12 +64,6 @@ $response = [
     'manufacturers_count' => $manufacturersCount,
     'php_version' => phpversion(),
     'ocr_engines' => $ocrEngines,
-    'encryption_enabled' => $config['encryption']['enabled'] ?? false,
 ];
-
-// Incluir encryption_key solo si está configurada
-if (!empty($config['encryption']['key'])) {
-    $response['encryption_key'] = $config['encryption']['key'];
-}
 
 respond($response, 200);

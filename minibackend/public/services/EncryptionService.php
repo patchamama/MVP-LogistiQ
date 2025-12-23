@@ -12,29 +12,40 @@ class EncryptionService
     /**
      * Encriptar texto plano usando AES-256-CBC
      *
+     * Compatible con desencriptación en CryptoJS (frontend)
+     *
      * @param string $plaintext Datos a encriptar
-     * @param string $key Clave de encriptación (min 32 chars)
+     * @param string $key Clave de encriptación (formato hexadecimal de 64 caracteres)
      * @return string Datos encriptados en formato: base64(IV::encrypted)
      */
     public static function encrypt(string $plaintext, string $key): string
     {
         $ivLength = openssl_cipher_iv_length(self::CIPHER);
-        $iv = openssl_random_pseudo_bytes($ivLength);
 
-        // Usar 0 para obtener base64 directamente (sin OPENSSL_RAW_OUTPUT)
+        // IMPORTANTE: IV DETERMINÍSTICO basado en SHA256 del plaintext
+        // Esto DEBE coincidir con lo que hace CryptoJS en setup-config.js
+        // para que la encriptación sea compatible 100%
+        $ivBinary = substr(hash('sha256', $plaintext, true), 0, $ivLength);
+        $ivHex = bin2hex($ivBinary);
+
+        // Convertir clave de hex a binario
+        $keyBinary = hex2bin($key);
+        if ($keyBinary === false) {
+            throw new Exception('Invalid key format - expected hexadecimal');
+        }
+
+        // Usar flag 0 para obtener base64 directamente de openssl_encrypt
+        // El ciphertext resultará en base64, listo para CryptoJS
         $encrypted = openssl_encrypt(
             $plaintext,
             self::CIPHER,
-            $key,
-            0, // 0 = base64 output (no raw)
-            $iv
+            $keyBinary,
+            0, // Flag 0 - Returns base64 encoded string
+            $ivBinary
         );
 
-        // Formato: IV::encrypted (ambos en hex/base64)
-        // El IV se almacena en hex para separación clara
-        $ivHex = bin2hex($iv);
-
-        // Ya está en base64, no necesitamos codificar de nuevo
+        // Formato final: base64(IV_hex::encrypted_base64)
+        // Esto coincide con lo que genera CryptoJS en el setup
         $combined = $ivHex . '::' . $encrypted;
         return base64_encode($combined);
     }
@@ -42,8 +53,10 @@ class EncryptionService
     /**
      * Desencriptar datos encriptados con encrypt()
      *
+     * Compatible con encriptación generada por CryptoJS en setup-config.js
+     *
      * @param string $ciphertext Datos encriptados (base64)
-     * @param string $key Clave de encriptación
+     * @param string $key Clave de encriptación (formato hexadecimal de 64 caracteres)
      * @return string Texto plano original
      * @throws Exception Si la desencriptación falla
      */
@@ -59,10 +72,10 @@ class EncryptionService
             // 2. Separar IV y datos encriptados
             $parts = explode('::', $decoded, 2);
             if (count($parts) !== 2) {
-                throw new Exception('Invalid cipher format');
+                throw new Exception('Invalid cipher format - expected IV::encrypted');
             }
 
-            list($ivHex, $encrypted) = $parts;
+            list($ivHex, $encryptedBase64) = $parts;
 
             // 3. Convertir IV de hex a binario
             $iv = hex2bin($ivHex);
@@ -70,23 +83,20 @@ class EncryptionService
                 throw new Exception('Invalid IV format');
             }
 
-            // 4. Detectar formato del encrypted (base64 vs binario)
-            // Si es base64 válido y ASCII-printable, usar flag 0
-            // Si es binario, usar flag 1
-            $isValidBase64 = base64_encode(base64_decode($encrypted, true)) === $encrypted;
-            $flags = 0; // Asumir base64 por defecto (nueva versión)
-
-            if (!$isValidBase64) {
-                // Es binario (versión antigua), usar flag 1
-                $flags = 1;
+            // 4. Convertir clave de hex a binario
+            // IMPORTANTE: La clave debe estar en formato hexadecimal (64 chars para AES-256)
+            $keyBinary = hex2bin($key);
+            if ($keyBinary === false) {
+                throw new Exception('Invalid key format - expected hexadecimal');
             }
 
-            // 5. Desencriptar
+            // 5. Desencriptar usando openssl_decrypt con flag 0
+            // El encrypted está en formato base64 de CryptoJS
             $plaintext = openssl_decrypt(
-                $encrypted,
+                $encryptedBase64,
                 self::CIPHER,
-                $key,
-                $flags,
+                $keyBinary,
+                0, // Flag 0 - Espera base64 como entrada
                 $iv
             );
 

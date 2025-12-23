@@ -54,21 +54,11 @@ export function decryptAPIKey(
       throw new Error('Invalid encryption key format')
     }
 
-    // 5. Detectar formato del payload encriptado
-    // Puede ser: base64 string (nueva version) o binary string (vieja version)
-    let ciphertext: any
-
-    try {
-      // Intentar como base64 (formato nuevo)
-      ciphertext = CryptoJS.enc.Base64.parse(encryptedPayload)
-    } catch (e) {
-      // Si falla, es posible que sea binary (formato viejo)
-      // En ese caso, convertir de latin1/binary a WordArray
-      ciphertext = CryptoJS.enc.Latin1.parse(encryptedPayload)
-    }
+    // 5. El payload encriptado es el ciphertext en base64
+    // Se pasa directamente como string a decrypt, sin parsing
 
     // 6. Desencriptar
-    const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+    const decrypted = CryptoJS.AES.decrypt(encryptedPayload, key, {
       iv: iv,
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7,
