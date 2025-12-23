@@ -34,15 +34,25 @@ else
 fi
 echo ""
 
-echo -e "${BLUE}[2/4]${NC} Checking if dist folder exists..."
-if [ ! -d "$FRONTEND_DIST" ]; then
-    echo -e "${YELLOW}✗ Dist folder not found at $FRONTEND_DIST${NC}"
-    exit 1
+echo -e "${BLUE}[2/5]${NC} Building frontend if needed..."
+if [ ! -d "$FRONTEND_DIST" ] || [ -z "$(ls -A "$FRONTEND_DIST" 2>/dev/null)" ]; then
+    echo -e "${YELLOW}⚠ Dist folder empty or missing, building frontend...${NC}"
+    cd "$PROJECT_ROOT/frontend"
+    npm install > /dev/null 2>&1
+    npm run build > /dev/null 2>&1
+    cd "$PROJECT_ROOT"
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Frontend built successfully${NC}"
+    else
+        echo -e "${YELLOW}✗ Frontend build failed${NC}"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}✓ Dist folder found (using existing build)${NC}"
 fi
-echo -e "${GREEN}✓ Dist folder found${NC}"
 echo ""
 
-echo -e "${BLUE}[3/4]${NC} Copying frontend assets to web root..."
+echo -e "${BLUE}[3/5]${NC} Copying frontend assets to web root..."
 # Copy all files from frontend/dist to the project root (web accessible folder)
 cp -r "$FRONTEND_DIST"/* "$DEPLOY_DIR/"
 if [ $? -eq 0 ]; then
@@ -58,7 +68,7 @@ else
 fi
 echo ""
 
-echo -e "${BLUE}[4/4]${NC} Updating version information..."
+echo -e "${BLUE}[4/5]${NC} Updating version information..."
 # Create version.json with current timestamp
 CURRENT_VERSION=$(grep '"version":' "$PROJECT_ROOT/frontend/package.json" | sed 's/.*"version": "\([^"]*\)".*/\1/')
 CURRENT_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
@@ -81,8 +91,10 @@ echo "  - App version: $CURRENT_VERSION"
 echo "  - Updated at: $CURRENT_TIMESTAMP"
 echo ""
 
+echo -e "${BLUE}[5/5]${NC} Deployment completed!"
+echo ""
 echo "================================"
-echo -e "${GREEN}✓ Deployment completed successfully!${NC}"
+echo -e "${GREEN}✓ Frontend Deployment Complete!${NC}"
 echo "================================"
 echo ""
 echo "Your application is now live at:"
