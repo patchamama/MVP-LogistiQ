@@ -1,11 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import packageJson from './package.json'
 
 export default defineConfig({
   base: '/MVP-LogistiQ/',
   define: {
     __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(packageJson.version),
   },
   plugins: [
     react(),

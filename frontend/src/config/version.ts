@@ -1,6 +1,6 @@
 // Version configuration
-// Update this version when making changes or bug fixes
-export const APP_VERSION = '0.1.0'
+// This is automatically populated from package.json during build
+export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.2.0'
 export const LAST_UPDATED = '2025-12-23'
 
 // For development: Show build timestamp
