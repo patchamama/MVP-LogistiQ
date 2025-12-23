@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { processImage, getProduct } from '../../services/api'
 
 // Mock axios globally

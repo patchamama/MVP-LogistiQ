@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import LoadingSpinner from '../../components/LoadingSpinner'
-import i18n from '../../i18n/config'
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({

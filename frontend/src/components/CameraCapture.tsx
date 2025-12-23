@@ -74,13 +74,13 @@ export default function CameraCapture() {
 
     const reader = new FileReader()
     reader.onload = async (e) => {
-      const imageBase64 = (e.target?.result as string).split(',')[1]
+      const imageBase64 = (e.target?.result as string)?.split(',')[1] || ''
       const response = await processImage(imageBase64, ocrEngine)
       setResult(response)
       setIsLoading(false)
 
       if (!response.success) {
-        setError(response.message)
+        setError(response.message || null)
       }
     }
     reader.readAsDataURL(file)
