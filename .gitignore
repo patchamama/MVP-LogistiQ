@@ -46,6 +46,6 @@ Thumbs.db
 .parcel-cache/
 
 # Build outputs
-frontend/dist/
+# frontend/dist/ - Included in repo for production deployment
 backend/public/.htaccess
 backend/.phpunit.result.cache
