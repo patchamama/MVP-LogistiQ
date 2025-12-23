@@ -22,7 +22,7 @@ export function decryptAPIKey(
   }
 
   try {
-    // 1. Decodificar base64 principal para obtener IV::base64encrypted
+    // 1. Decodificar base64 principal para obtener IV::encrypted
     let decoded: string
     try {
       decoded = atob(encryptedData)
@@ -30,13 +30,13 @@ export function decryptAPIKey(
       throw new Error('Invalid base64 format in encrypted data')
     }
 
-    // 2. Separar IV (hex) y datos encriptados (base64)
+    // 2. Separar IV (hex) y datos encriptados
     const parts = decoded.split('::', 2)
     if (parts.length !== 2) {
       throw new Error('Invalid cipher format - expected IV::encrypted')
     }
 
-    const [ivHex, encryptedBase64] = parts
+    const [ivHex, encryptedPayload] = parts
 
     // 3. Convertir IV de hex a WordArray (CryptoJS format)
     let iv: CryptoJS.lib.WordArray
@@ -54,19 +54,27 @@ export function decryptAPIKey(
       throw new Error('Invalid encryption key format')
     }
 
-    // 5. El encryptedBase64 ya está en base64 (viene del PHP openssl_encrypt con flag 0)
-    // CryptoJS puede desencriptar directamente desde base64
-    const decrypted = CryptoJS.AES.decrypt(
-      encryptedBase64, // Ya está en base64
-      key,
-      {
-        iv: iv,
-        mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7,
-      }
-    )
+    // 5. Detectar formato del payload encriptado
+    // Puede ser: base64 string (nueva version) o binary string (vieja version)
+    let ciphertext: any
 
-    // 6. Convertir resultado a string UTF-8
+    try {
+      // Intentar como base64 (formato nuevo)
+      ciphertext = CryptoJS.enc.Base64.parse(encryptedPayload)
+    } catch (e) {
+      // Si falla, es posible que sea binary (formato viejo)
+      // En ese caso, convertir de latin1/binary a WordArray
+      ciphertext = CryptoJS.enc.Latin1.parse(encryptedPayload)
+    }
+
+    // 6. Desencriptar
+    const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+      iv: iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+    })
+
+    // 7. Convertir resultado a string UTF-8
     const plaintext = decrypted.toString(CryptoJS.enc.Utf8)
 
     if (!plaintext) {

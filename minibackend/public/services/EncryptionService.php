@@ -62,7 +62,7 @@ class EncryptionService
                 throw new Exception('Invalid cipher format');
             }
 
-            list($ivHex, $encryptedBase64) = $parts;
+            list($ivHex, $encrypted) = $parts;
 
             // 3. Convertir IV de hex a binario
             $iv = hex2bin($ivHex);
@@ -70,12 +70,23 @@ class EncryptionService
                 throw new Exception('Invalid IV format');
             }
 
-            // 4. Desencriptar (el encrypted ya está en base64, usar 0 para decodificar automáticamente)
+            // 4. Detectar formato del encrypted (base64 vs binario)
+            // Si es base64 válido y ASCII-printable, usar flag 0
+            // Si es binario, usar flag 1
+            $isValidBase64 = base64_encode(base64_decode($encrypted, true)) === $encrypted;
+            $flags = 0; // Asumir base64 por defecto (nueva versión)
+
+            if (!$isValidBase64) {
+                // Es binario (versión antigua), usar flag 1
+                $flags = 1;
+            }
+
+            // 5. Desencriptar
             $plaintext = openssl_decrypt(
-                $encryptedBase64,
+                $encrypted,
                 self::CIPHER,
                 $key,
-                0, // 0 = espera base64 encoding, decodifica automáticamente
+                $flags,
                 $iv
             );
 
