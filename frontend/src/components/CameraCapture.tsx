@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { processImage } from '../services/api'
 import { APIResponse, CameraError, OCREngine } from '../types/product'
+import { getUserID } from '../utils/userID'
 import LoadingSpinner from './LoadingSpinner'
 import ProductResult from './ProductResult'
 
@@ -11,6 +12,7 @@ export default function CameraCapture() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -62,6 +64,13 @@ export default function CameraCapture() {
 
       // Set camera active first
       setIsCameraActive(true)
+
+      // Scroll to camera viewer on mobile
+      setTimeout(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
 
       // Then set the stream with a small delay
       setTimeout(() => {
@@ -138,7 +147,8 @@ export default function CameraCapture() {
       setIsLoading(true)
       setError(null)
 
-      const response = await processImage(imageBase64.split(',')[1], ocrEngine)
+      const userId = getUserID()
+      const response = await processImage(imageBase64.split(',')[1], ocrEngine, userId)
       setResult(response)
 
       if (!response.success) {
@@ -179,7 +189,8 @@ export default function CameraCapture() {
     const reader = new FileReader()
     reader.onload = async (e) => {
       const imageBase64 = (e.target?.result as string)?.split(',')[1] || ''
-      const response = await processImage(imageBase64, ocrEngine)
+      const userId = getUserID()
+      const response = await processImage(imageBase64, ocrEngine, userId)
       setResult(response)
 
       if (!response.success) {
@@ -316,7 +327,7 @@ export default function CameraCapture() {
 
   // Camera active view
   return (
-    <div className="w-full max-w-2xl mx-auto bg-black rounded-lg overflow-hidden">
+    <div ref={containerRef} className="w-full max-w-2xl mx-auto bg-black rounded-lg overflow-hidden">
       {/* Camera Header */}
       <div className="bg-gray-900 text-white p-3 flex justify-between items-center">
         <h3 className="font-semibold text-sm">{t('camera.title')}</h3>
