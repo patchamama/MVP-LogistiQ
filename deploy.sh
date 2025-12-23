@@ -23,7 +23,18 @@ PROJECT_ROOT="$SCRIPT_DIR"
 FRONTEND_DIST="$PROJECT_ROOT/frontend/dist"
 DEPLOY_DIR="$PROJECT_ROOT"
 
-echo -e "${BLUE}[1/4]${NC} Pulling latest changes from GitHub..."
+echo -e "${BLUE}[1/5]${NC} Cleaning up deployed files..."
+# Remove old deployed assets from the root that will be copied from frontend/dist
+rm -f "$DEPLOY_DIR"/index.html 2>/dev/null || true
+rm -f "$DEPLOY_DIR"/manifest.webmanifest 2>/dev/null || true
+rm -f "$DEPLOY_DIR"/registerSW.js 2>/dev/null || true
+rm -f "$DEPLOY_DIR"/sw.js 2>/dev/null || true
+rm -f "$DEPLOY_DIR"/workbox-*.js 2>/dev/null || true
+rm -rf "$DEPLOY_DIR"/assets 2>/dev/null || true
+echo -e "${GREEN}✓ Cleanup completed${NC}"
+echo ""
+
+echo -e "${BLUE}[2/5]${NC} Pulling latest changes from GitHub..."
 cd "$PROJECT_ROOT"
 git pull origin main
 if [ $? -eq 0 ]; then
@@ -34,7 +45,7 @@ else
 fi
 echo ""
 
-echo -e "${BLUE}[2/5]${NC} Building frontend if needed..."
+echo -e "${BLUE}[3/5]${NC} Building frontend if needed..."
 if [ ! -d "$FRONTEND_DIST" ] || [ -z "$(ls -A "$FRONTEND_DIST" 2>/dev/null)" ]; then
     echo -e "${YELLOW}⚠ Dist folder empty or missing, building frontend...${NC}"
     cd "$PROJECT_ROOT/frontend"
@@ -52,7 +63,7 @@ else
 fi
 echo ""
 
-echo -e "${BLUE}[3/5]${NC} Copying frontend assets to web root..."
+echo -e "${BLUE}[4/5]${NC} Copying frontend assets to web root..."
 # Copy all files from frontend/dist to the project root (web accessible folder)
 cp -r "$FRONTEND_DIST"/* "$DEPLOY_DIR/"
 if [ $? -eq 0 ]; then
@@ -68,7 +79,7 @@ else
 fi
 echo ""
 
-echo -e "${BLUE}[4/5]${NC} Updating version information..."
+echo -e "${BLUE}[5/5]${NC} Updating version information..."
 # Create version.json with current timestamp
 CURRENT_VERSION=$(grep '"version":' "$PROJECT_ROOT/frontend/package.json" | sed 's/.*"version": "\([^"]*\)".*/\1/')
 CURRENT_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
@@ -91,7 +102,7 @@ echo "  - App version: $CURRENT_VERSION"
 echo "  - Updated at: $CURRENT_TIMESTAMP"
 echo ""
 
-echo -e "${BLUE}[5/5]${NC} Deployment completed!"
+echo -e "${GREEN}[✓]${NC} Deployment completed!"
 echo ""
 echo "================================"
 echo -e "${GREEN}✓ Frontend Deployment Complete!${NC}"
