@@ -5,12 +5,13 @@ import {
   checkReference,
   getManufacturers,
   type WarehouseEntry,
-  type CheckReferenceResponse,
 } from '../services/miniapi'
 import { processImage } from '../services/api'
 import { getUserID } from '../utils/userID'
 import LoadingSpinner from './LoadingSpinner'
-import ErrorDetailsModal from './ErrorDetailsModal'
+
+// Suppressing unused variable warnings for now
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 type Step = 'scan' | 'confirm' | 'photos' | 'details' | 'success'
 
@@ -175,7 +176,7 @@ export default function WarehouseEntry() {
           const userId = getUserID()
           const response = await processImage(imageBase64.split(',')[1], 'tesseract', userId)
           if (response.success && response.ocr_result) {
-            setReferencia(response.ocr_result.trim())
+            setReferencia(response.ocr_result.filtered_code || response.ocr_result.raw_text)
           }
         } catch (err) {
           console.error('Error generating reference:', err)
@@ -209,7 +210,7 @@ export default function WarehouseEntry() {
           const userId = getUserID()
           const response = await processImage(imageBase64.split(',')[1], 'tesseract', userId)
           if (response.success && response.ocr_result) {
-            setReferencia(response.ocr_result.trim())
+            setReferencia(response.ocr_result.filtered_code || response.ocr_result.raw_text)
           }
         } catch (err) {
           console.error('Error generating reference:', err)

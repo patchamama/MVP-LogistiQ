@@ -335,91 +335,93 @@ export default function CameraCapture() {
 
   // Camera active view
   return (
-    <div ref={containerRef} className="w-full max-w-2xl mx-auto bg-black rounded-lg overflow-hidden">
-      {/* Camera Header */}
-      <div className="bg-gray-900 text-white p-3 flex justify-between items-center">
-        <h3 className="font-semibold text-sm">{t('camera.title')}</h3>
-        <button
-          onClick={stopCamera}
-          className="text-xl hover:text-red-400 transition"
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* Camera Error */}
-      {cameraError && (
-        <div className="bg-red-600 text-white p-3 text-center font-semibold text-sm">
-          {cameraError}
-        </div>
-      )}
-
-      {/* Video Container */}
-      <div className="relative w-full bg-black flex items-center justify-center overflow-hidden" style={{ height: '40vh' }}>
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          disablePictureInPicture
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block',
-          }}
-        />
-        {!isVideoReady && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-white text-center">Initializing camera...</p>
-          </div>
-        )}
-        <canvas ref={canvasRef} className="hidden" />
-      </div>
-
-      {/* Controls Footer */}
-      <div className="bg-gray-900 text-white p-3 space-y-2">
-        {/* Engine Selector */}
-        <div className="flex gap-2 text-sm">
-          <label className="whitespace-nowrap flex items-center">{t('camera.ocrEngine')}</label>
-          <select
-            value={ocrEngine}
-            onChange={(e) => setOcrEngine(e.target.value as OCREngine)}
-            className="flex-1 px-2 py-1 border border-gray-600 rounded text-xs bg-gray-800 text-white"
-          >
-            <option value="tesseract">{t('camera.engines.tesseract')}</option>
-            <option value="easyocr">{t('camera.engines.easyocr')}</option>
-            <option value="both">{t('camera.engines.both')}</option>
-            <option value="openai-vision">{t('camera.engines.openaiVision')}</option>
-            <option value="claude-vision">{t('camera.engines.claudeVision')}</option>
-          </select>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={capturePhoto}
-            className="flex-1 py-2 px-3 bg-green-600 text-white rounded hover:bg-green-700 transition font-semibold text-sm"
-          >
-            📸 {t('camera.capture')}
-          </button>
+    <>
+      <div ref={containerRef} className="w-full max-w-2xl mx-auto bg-black rounded-lg overflow-hidden">
+        {/* Camera Header */}
+        <div className="bg-gray-900 text-white p-3 flex justify-between items-center">
+          <h3 className="font-semibold text-sm">{t('camera.title')}</h3>
           <button
             onClick={stopCamera}
-            className="flex-1 py-2 px-3 bg-red-600 text-white rounded hover:bg-red-700 transition font-semibold text-sm"
+            className="text-xl hover:text-red-400 transition"
           >
-            ✕ {t('camera.cancel')}
+            ✕
           </button>
         </div>
-      </div>
-    </div>
 
-    {/* Error Details Modal */}
-    {showErrorModal && (
-      <ErrorDetailsModal
-        error={errorDetails}
-        onClose={() => setShowErrorModal(false)}
-        isOpen={showErrorModal}
-      />
-    )}
+        {/* Camera Error */}
+        {cameraError && (
+          <div className="bg-red-600 text-white p-3 text-center font-semibold text-sm">
+            {cameraError}
+          </div>
+        )}
+
+        {/* Video Container */}
+        <div className="relative w-full bg-black flex items-center justify-center overflow-hidden" style={{ height: '40vh' }}>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            disablePictureInPicture
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+          {!isVideoReady && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p className="text-white text-center">Initializing camera...</p>
+            </div>
+          )}
+          <canvas ref={canvasRef} className="hidden" />
+        </div>
+
+        {/* Controls Footer */}
+        <div className="bg-gray-900 text-white p-3 space-y-2">
+          {/* Engine Selector */}
+          <div className="flex gap-2 text-sm">
+            <label className="whitespace-nowrap flex items-center">{t('camera.ocrEngine')}</label>
+            <select
+              value={ocrEngine}
+              onChange={(e) => setOcrEngine(e.target.value as OCREngine)}
+              className="flex-1 px-2 py-1 border border-gray-600 rounded text-xs bg-gray-800 text-white"
+            >
+              <option value="tesseract">{t('camera.engines.tesseract')}</option>
+              <option value="easyocr">{t('camera.engines.easyocr')}</option>
+              <option value="both">{t('camera.engines.both')}</option>
+              <option value="openai-vision">{t('camera.engines.openaiVision')}</option>
+              <option value="claude-vision">{t('camera.engines.claudeVision')}</option>
+            </select>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={capturePhoto}
+              className="flex-1 py-2 px-3 bg-green-600 text-white rounded hover:bg-green-700 transition font-semibold text-sm"
+            >
+              📸 {t('camera.capture')}
+            </button>
+            <button
+              onClick={stopCamera}
+              className="flex-1 py-2 px-3 bg-red-600 text-white rounded hover:bg-red-700 transition font-semibold text-sm"
+            >
+              ✕ {t('camera.cancel')}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Details Modal */}
+      {showErrorModal && (
+        <ErrorDetailsModal
+          error={errorDetails}
+          onClose={() => setShowErrorModal(false)}
+          isOpen={showErrorModal}
+        />
+      )}
+    </>
   )
 }
