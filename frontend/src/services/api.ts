@@ -22,16 +22,25 @@ export const processImage = async (
     return response.data
   } catch (error) {
     if (axios.isAxiosError(error)) {
+      const statusCode = error.response?.status || 'Unknown'
+      const errorData = error.response?.data as any
+      const errorMessage = errorData?.message || 'Error al procesar la imagen'
+      const errorDetails = errorData?.details || errorData?.error || null
+
       return {
         success: false,
         error: error.message,
-        message: error.response?.data?.message || 'Error al procesar la imagen'
+        message: errorMessage,
+        statusCode: statusCode,
+        details: errorDetails
       }
     }
     return {
       success: false,
       error: 'Error desconocido',
-      message: 'Ocurrió un error al procesar la solicitud'
+      message: 'Ocurrió un error al procesar la solicitud',
+      statusCode: 'Network Error',
+      details: null
     }
   }
 }

@@ -16,6 +16,7 @@ export default function CameraCapture() {
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<APIResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [errorDetails, setErrorDetails] = useState<APIResponse | null>(null)
   const [ocrEngine, setOcrEngine] = useState<'tesseract' | 'easyocr' | 'both'>('tesseract')
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [isVideoReady, setIsVideoReady] = useState(false)
@@ -142,6 +143,7 @@ export default function CameraCapture() {
 
       if (!response.success) {
         setError(response.message || null)
+        setErrorDetails(response)
         // Wait 3 seconds before clearing the image on error
         setTimeout(() => {
           setCapturedImage(null)
@@ -151,6 +153,12 @@ export default function CameraCapture() {
       console.error('Capture error:', err)
       const errorMsg = 'Failed to capture photo'
       setError(errorMsg)
+      setErrorDetails({
+        success: false,
+        message: errorMsg,
+        statusCode: 'Unknown',
+        details: null
+      })
       // Wait 3 seconds before clearing the image on error
       setTimeout(() => {
         setCapturedImage(null)
@@ -166,6 +174,7 @@ export default function CameraCapture() {
 
     setIsLoading(true)
     setError(null)
+    setErrorDetails(null)
 
     const reader = new FileReader()
     reader.onload = async (e) => {
@@ -175,6 +184,7 @@ export default function CameraCapture() {
 
       if (!response.success) {
         setError(response.message || null)
+        setErrorDetails(response)
       }
       setIsLoading(false)
     }
@@ -185,8 +195,21 @@ export default function CameraCapture() {
     setResult(null)
     setError(null)
     setCapturedImage(null)
+    setErrorDetails(null)
     setIsCameraActive(false)
   }, [])
+
+  const showErrorDetails = useCallback(() => {
+    if (!errorDetails) return
+
+    const statusCode = errorDetails.statusCode || 'Unknown'
+    const message = errorDetails.message || 'Sin mensaje'
+    const details = errorDetails.details ? JSON.stringify(errorDetails.details, null, 2) : 'Sin detalles adicionales'
+
+    const errorMessage = `🔴 ERROR HTTP ${statusCode}\n\n📝 Mensaje:\n${message}\n\n📋 Detalles:\n${details}`
+
+    alert(errorMessage)
+  }, [errorDetails])
 
   if (isLoading) {
     return <LoadingSpinner />
@@ -201,7 +224,11 @@ export default function CameraCapture() {
     return (
       <div className="space-y-4">
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div
+            onClick={showErrorDetails}
+            className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm cursor-pointer hover:bg-red-100 transition"
+            title="Click para ver detalles completos del error"
+          >
             {error}
           </div>
         )}
@@ -237,7 +264,11 @@ export default function CameraCapture() {
     return (
       <div className="space-y-4">
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div
+            onClick={showErrorDetails}
+            className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm cursor-pointer hover:bg-red-100 transition"
+            title="Click para ver detalles completos del error"
+          >
             {error}
           </div>
         )}

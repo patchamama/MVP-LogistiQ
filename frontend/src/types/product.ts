@@ -21,6 +21,8 @@ export interface APIResponse {
   product?: Product
   error?: string
   message?: string
+  statusCode?: number | string
+  details?: any
 }
 
 export interface CameraError {
