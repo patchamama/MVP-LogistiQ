@@ -109,7 +109,7 @@ export const getAPIKeyStatus = async (userId: string): Promise<APIKeyStatus> => 
 export const deleteAPIKeys = async (userId: string): Promise<APIResponse> => {
   try {
     const response = await apiClient.delete('/settings/api-keys', {
-      params: { userId }
+      data: { userId }
     })
     return response.data
   } catch (error) {
