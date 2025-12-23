@@ -64,6 +64,8 @@ $response = [
     'manufacturers_count' => $manufacturersCount,
     'php_version' => phpversion(),
     'ocr_engines' => $ocrEngines,
+    'encryption_enabled' => $config['encryption']['enabled'] ?? false,
+    'encryption_key' => $config['encryption']['key'] ?? null,
 ];
 
 respond($response, 200);
