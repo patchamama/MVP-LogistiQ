@@ -18,6 +18,8 @@
     "selectImage": "Seleccionar Imagen",
     "capture": "Capturar",
     "cancel": "Cancelar",
+    "capturedImage": "Imagen Capturada",
+    "retry": "Reintentar",
     "ocrEngine": "Motor OCR:",
     "engines": {
       "tesseract": "Tesseract (rápido)",

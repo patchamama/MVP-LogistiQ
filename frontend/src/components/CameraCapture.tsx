@@ -19,6 +19,7 @@ export default function CameraCapture() {
   const [ocrEngine, setOcrEngine] = useState<'tesseract' | 'easyocr' | 'both'>('tesseract')
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [isVideoReady, setIsVideoReady] = useState(false)
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
 
   // Cleanup stream on unmount
   useEffect(() => {
@@ -127,20 +128,33 @@ export default function CameraCapture() {
       // Draw the video frame directly without mirroring
       context.drawImage(videoRef.current, 0, 0)
 
-      const imageBase64 = canvasRef.current.toDataURL('image/jpeg').split(',')[1]
+      const imageBase64 = canvasRef.current.toDataURL('image/jpeg')
+
+      // Close camera and show captured image
+      stopCamera()
+      setCapturedImage(imageBase64)
 
       setIsLoading(true)
       setError(null)
 
-      const response = await processImage(imageBase64, ocrEngine)
+      const response = await processImage(imageBase64.split(',')[1], ocrEngine)
       setResult(response)
 
       if (!response.success) {
         setError(response.message || null)
+        // Wait 3 seconds before clearing the image on error
+        setTimeout(() => {
+          setCapturedImage(null)
+        }, 3000)
       }
     } catch (err) {
       console.error('Capture error:', err)
-      setCameraError('Failed to capture photo')
+      const errorMsg = 'Failed to capture photo'
+      setError(errorMsg)
+      // Wait 3 seconds before clearing the image on error
+      setTimeout(() => {
+        setCapturedImage(null)
+      }, 3000)
     } finally {
       setIsLoading(false)
     }
@@ -170,6 +184,7 @@ export default function CameraCapture() {
   const resetCapture = useCallback(() => {
     setResult(null)
     setError(null)
+    setCapturedImage(null)
     setIsCameraActive(false)
   }, [])
 
@@ -179,6 +194,42 @@ export default function CameraCapture() {
 
   if (result?.success) {
     return <ProductResult result={result} onReset={resetCapture} />
+  }
+
+  // Show captured image with error message if capture failed
+  if (capturedImage && !result?.success) {
+    return (
+      <div className="space-y-4">
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        <div className="w-full max-w-2xl mx-auto bg-black rounded-lg overflow-hidden">
+          <div className="bg-gray-900 text-white p-3">
+            <h3 className="font-semibold text-sm">{t('camera.capturedImage')}</h3>
+          </div>
+          <div className="relative w-full bg-black aspect-video flex items-center justify-center overflow-hidden">
+            <img
+              src={capturedImage}
+              alt="Captured"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="bg-gray-900 text-white p-3">
+            <div className="flex gap-2">
+              <button
+                onClick={resetCapture}
+                className="flex-1 py-2 px-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-semibold text-sm"
+              >
+                🔄 {t('camera.retry')}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!isCameraActive) {
