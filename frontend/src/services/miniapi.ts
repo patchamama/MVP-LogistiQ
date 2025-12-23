@@ -1,6 +1,42 @@
 import axios from 'axios'
 
-const MINI_API_URL = import.meta.env.VITE_MINI_API_URL || 'http://localhost:9000/api'
+/**
+ * Detectar URL del MiniBACKEND basado en el entorno
+ */
+function getMiniApiUrl(): string {
+  // Si está configurado explícitamente, usar eso
+  if (import.meta.env.VITE_MINI_API_URL) {
+    return import.meta.env.VITE_MINI_API_URL
+  }
+
+  // Detectar automáticamente basado en el origen
+  const protocol = window.location.protocol
+  const hostname = window.location.hostname
+  const port = window.location.port
+  const pathname = window.location.pathname
+
+  // Si estamos en producción (https://backend.patchamama.com)
+  if (hostname === 'backend.patchamama.com' || hostname === 'logistiq.patchamama.com') {
+    return 'https://backend.patchamama.com/MVP-LogistiQ/minibackend/public'
+  }
+
+  // Si estamos en localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    // Desarrollo con npm run dev
+    return 'http://localhost:9000'
+  }
+
+  // Fallback: construir URL basada en el origen actual
+  // Útil para otros servidores
+  return `${protocol}//${hostname}${port ? ':' + port : ''}/MVP-LogistiQ/minibackend/public`
+}
+
+const MINI_API_URL = getMiniApiUrl()
+
+// Log para debugging (solo en desarrollo)
+if (import.meta.env.DEV) {
+  console.log('MiniBACKEND URL configurado a:', MINI_API_URL)
+}
 
 export interface WarehouseEntry {
   referencia: string

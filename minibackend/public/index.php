@@ -1,8 +1,32 @@
 <?php
-// Configuración de headers CORS
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Configuración de headers CORS - Permitir múltiples orígenes
+$allowedOrigins = [
+    'http://localhost:5173',        // Desarrollo local Vite
+    'http://localhost:3000',        // Desarrollo local alternativo
+    'http://localhost:9000',        // MiniBACKEND desarrollo
+    'https://backend.patchamama.com', // Producción
+    'http://backend.patchamama.com',  // Producción (HTTP)
+    'https://logistiq.patchamama.com', // Frontend producción
+    'http://logistiq.patchamama.com',  // Frontend producción (HTTP)
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowedOrigins)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+} else {
+    // Por defecto, permitir localhost para desarrollo
+    if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+    } else {
+        // Para otros orígenes, permitir HTTPS backends
+        header('Access-Control-Allow-Origin: https://backend.patchamama.com');
+    }
+}
+
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Max-Age: 86400');
 header('Content-Type: application/json; charset=utf-8');
 
 // Manejar peticiones OPTIONS
@@ -30,9 +54,29 @@ initializeJsonFiles();
 
 // Parsear URL y método
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$basePath = '/api';
-$route = str_replace($basePath, '', $requestUri);
 $method = $_SERVER['REQUEST_METHOD'];
+
+// Detectar la ruta base considerando subdirectorios
+// En Plesk: /MVP-LogistiQ/minibackend/public/api/...
+// En local: /api/...
+// En desarrollo: /api/...
+$scriptName = $_SERVER['SCRIPT_NAME']; // /MVP-LogistiQ/minibackend/public/index.php
+$scriptDir = dirname($scriptName); // /MVP-LogistiQ/minibackend/public
+
+// Obtener la ruta relativa desde el directorio público
+$route = substr($requestUri, strlen($scriptDir));
+
+// Si la ruta no comienza con /, agregar
+if (empty($route) || $route[0] !== '/') {
+    $route = '/' . $route;
+}
+
+// Remover /api si está incluido (para compatibilidad con ambos formatos)
+if (strpos($route, '/api/') === 0) {
+    $route = substr($route, 4); // Remover '/api'
+} else if ($route === '/api') {
+    $route = '';
+}
 
 // Router simple
 switch (true) {

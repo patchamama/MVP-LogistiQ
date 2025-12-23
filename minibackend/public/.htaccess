@@ -1,11 +1,18 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /
+    # RewriteBase se configura dinámicamente según el directorio
+    # Para Plesk: /MVP-LogistiQ/minibackend/public/
+    # Para desarrollo: /minibackend/public/ o simplemente /
 
     # No reescribir archivos o directorios existentes
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
 
-    # Reescribir todo a index.php
-    RewriteRule ^ index.php [QSA,L]
+    # Reescribir todo a index.php (mantiene query string con QSA)
+    RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
+
+# Configuración adicional para Plesk
+<FilesMatch "\.php$">
+    # Permitir que se sirvan archivos PHP
+</FilesMatch>
