@@ -10,6 +10,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use Slim\Factory\AppFactory;
 use LogistiQ\Middleware\CorsMiddleware;
 use LogistiQ\Controllers\OCRController;
+use LogistiQ\Controllers\SettingsController;
 
 // Create app
 $app = AppFactory::create();
@@ -40,6 +41,22 @@ $app->get('/api/products/{code}', function ($request, $response, $args) {
 $app->get('/api/products/search', function ($request, $response) {
     $controller = new OCRController();
     return $controller->searchProducts($request, $response);
+});
+
+// Settings - API Keys
+$app->post('/api/settings/api-keys', function ($request, $response) {
+    $controller = new SettingsController();
+    return $controller->saveAPIKeys($request, $response);
+});
+
+$app->get('/api/settings/api-keys/status', function ($request, $response) {
+    $controller = new SettingsController();
+    return $controller->getAPIKeyStatus($request, $response);
+});
+
+$app->delete('/api/settings/api-keys', function ($request, $response) {
+    $controller = new SettingsController();
+    return $controller->deleteAPIKeys($request, $response);
 });
 
 // Health check

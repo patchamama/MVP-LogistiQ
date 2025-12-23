@@ -5,6 +5,9 @@ namespace LogistiQ\Controllers;
 use LogistiQ\Services\TesseractService;
 use LogistiQ\Services\EasyOCRService;
 use LogistiQ\Services\ProductService;
+use LogistiQ\Services\OpenAIVisionService;
+use LogistiQ\Services\ClaudeVisionService;
+use LogistiQ\Services\APIKeyService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -13,12 +16,18 @@ class OCRController
     private TesseractService $tesseractService;
     private EasyOCRService $easyOCRService;
     private ProductService $productService;
+    private OpenAIVisionService $openAIVisionService;
+    private ClaudeVisionService $claudeVisionService;
+    private APIKeyService $apiKeyService;
 
     public function __construct()
     {
         $this->tesseractService = new TesseractService();
         $this->easyOCRService = new EasyOCRService();
         $this->productService = new ProductService();
+        $this->openAIVisionService = new OpenAIVisionService();
+        $this->claudeVisionService = new ClaudeVisionService();
+        $this->apiKeyService = new APIKeyService();
     }
 
     /**
@@ -40,9 +49,11 @@ class OCRController
 
             $imageBase64 = $data['image'];
             $engine = $data['engine'] ?? 'tesseract';
+            $userId = $data['userId'] ?? null;
 
             // Validate engine
-            if (!in_array($engine, ['tesseract', 'easyocr', 'both'])) {
+            $validEngines = ['tesseract', 'easyocr', 'both', 'openai-vision', 'claude-vision'];
+            if (!in_array($engine, $validEngines)) {
                 return $this->jsonResponse($response, [
                     'success' => false,
                     'message' => 'Invalid OCR engine'
@@ -50,6 +61,52 @@ class OCRController
             }
 
             $results = [];
+
+            // Process with OpenAI Vision
+            if ($engine === 'openai-vision') {
+                if (!$userId) {
+                    return $this->jsonResponse($response, [
+                        'success' => false,
+                        'message' => 'User ID is required for AI vision engines'
+                    ], 400);
+                }
+
+                $userKeys = $this->apiKeyService->getUserKeys($userId);
+                if (!$userKeys || empty($userKeys['openai_key'])) {
+                    return $this->jsonResponse($response, [
+                        'success' => false,
+                        'message' => 'OpenAI API key not configured. Please configure it in settings.'
+                    ], 400);
+                }
+
+                $openaiResult = $this->openAIVisionService->processImage($imageBase64, $userKeys['openai_key']);
+                if ($openaiResult['success']) {
+                    $results['openai-vision'] = $openaiResult;
+                }
+            }
+
+            // Process with Claude Vision
+            if ($engine === 'claude-vision') {
+                if (!$userId) {
+                    return $this->jsonResponse($response, [
+                        'success' => false,
+                        'message' => 'User ID is required for AI vision engines'
+                    ], 400);
+                }
+
+                $userKeys = $this->apiKeyService->getUserKeys($userId);
+                if (!$userKeys || empty($userKeys['anthropic_key'])) {
+                    return $this->jsonResponse($response, [
+                        'success' => false,
+                        'message' => 'Anthropic (Claude) API key not configured. Please configure it in settings.'
+                    ], 400);
+                }
+
+                $claudeResult = $this->claudeVisionService->processImage($imageBase64, $userKeys['anthropic_key']);
+                if ($claudeResult['success']) {
+                    $results['claude-vision'] = $claudeResult;
+                }
+            }
 
             // Process with Tesseract
             if ($engine === 'tesseract' || $engine === 'both') {
@@ -67,9 +124,13 @@ class OCRController
                 }
             }
 
-            // Use first successful result
+            // Use first successful result (prioritize Vision APIs)
             $ocrResult = null;
-            if (isset($results['tesseract'])) {
+            if (isset($results['openai-vision'])) {
+                $ocrResult = $results['openai-vision'];
+            } elseif (isset($results['claude-vision'])) {
+                $ocrResult = $results['claude-vision'];
+            } elseif (isset($results['tesseract'])) {
                 $ocrResult = $results['tesseract'];
             } elseif (isset($results['easyocr'])) {
                 $ocrResult = $results['easyocr'];
