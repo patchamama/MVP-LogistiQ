@@ -5,6 +5,9 @@ vendor/
 # Production
 dist/
 build/
+# Exception: Include frontend/dist for production deployment
+!frontend/dist/
+!frontend/dist/**
 
 # Environment variables
 .env
