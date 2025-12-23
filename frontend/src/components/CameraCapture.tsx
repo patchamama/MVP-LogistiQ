@@ -18,6 +18,7 @@ export default function CameraCapture() {
   const [error, setError] = useState<string | null>(null)
   const [ocrEngine, setOcrEngine] = useState<'tesseract' | 'easyocr' | 'both'>('tesseract')
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [isVideoReady, setIsVideoReady] = useState(false)
 
   // Cleanup stream on unmount
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function CameraCapture() {
     try {
       setError(null)
       setCameraError(null)
+      setIsVideoReady(false)
       console.log('Starting camera...')
 
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -69,7 +71,10 @@ export default function CameraCapture() {
           const playPromise = videoRef.current.play()
           if (playPromise !== undefined) {
             playPromise
-              .then(() => console.log('Video is playing'))
+              .then(() => {
+                console.log('Video is playing')
+                setIsVideoReady(true)
+              })
               .catch(err => console.error('Play failed:', err))
           }
         }
@@ -103,6 +108,7 @@ export default function CameraCapture() {
 
     setIsCameraActive(false)
     setCameraError(null)
+    setIsVideoReady(false)
   }, [])
 
   const capturePhoto = useCallback(async () => {
@@ -118,10 +124,8 @@ export default function CameraCapture() {
       canvasRef.current.width = videoRef.current.videoWidth
       canvasRef.current.height = videoRef.current.videoHeight
 
-      // Mirror the video (flip horizontally)
-      context.scale(-1, 1)
-      context.drawImage(videoRef.current, -videoRef.current.videoWidth, 0)
-      context.scale(-1, 1) // Reset scale
+      // Draw the video frame directly without mirroring
+      context.drawImage(videoRef.current, 0, 0)
 
       const imageBase64 = canvasRef.current.toDataURL('image/jpeg').split(',')[1]
 
@@ -260,11 +264,9 @@ export default function CameraCapture() {
             height: '100%',
             objectFit: 'cover',
             display: 'block',
-            transform: 'scaleX(-1)',
-            WebkitTransform: 'scaleX(-1)',
           }}
         />
-        {!videoRef.current?.srcObject && (
+        {!isVideoReady && (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="text-white text-center">Initializing camera...</p>
           </div>
