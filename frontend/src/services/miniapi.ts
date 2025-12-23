@@ -94,13 +94,23 @@ export interface GetEntriesResponse {
   entries: WarehouseEntryRow[]
 }
 
+export interface OCREngine {
+  name: string
+  requires_key: boolean
+  api_key_encrypted?: string
+}
+
 export interface HealthResponse {
   status: string
   timestamp: string
+  version?: string
   storage_path: string
   entries_count: number
   manufacturers_count: number
   php_version: string
+  ocr_engines?: OCREngine[]
+  encryption_enabled?: boolean
+  encryption_key?: string
 }
 
 /**

@@ -1,0 +1,24 @@
+# Archivo de configuración con API keys encriptadas
+# NUNCA commitear - contiene información sensible
+config.php
+
+# Datos locales del almacén
+data/entries.json
+data/manufacturers.json
+
+# Imágenes del almacén
+storage/almacen_imagenes/*
+!storage/almacen_imagenes/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Editor temporales
+*.tmp
+*.bak
+*~

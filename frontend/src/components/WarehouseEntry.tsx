@@ -4,10 +4,13 @@ import {
   createEntry,
   checkReference,
   getManufacturers,
+  checkHealth,
   type WarehouseEntry,
+  type OCREngine,
 } from '../services/miniapi'
 import { processImage } from '../services/api'
 import { getUserID } from '../utils/userID'
+import { decryptAPIKey } from '../utils/encryption'
 import LoadingSpinner from './LoadingSpinner'
 
 // Suppressing unused variable warnings for now
@@ -59,9 +62,19 @@ export default function WarehouseEntry() {
   // Estados de generación de referencia
   const [generatingReference, setGeneratingReference] = useState(false)
 
-  // Cargar fabricantes al montar
+  // Estados de OCR
+  const [ocrEngine, setOcrEngine] = useState<string>('tesseract')
+  const [availableEngines, setAvailableEngines] = useState<OCREngine[]>([])
+  const [decryptedKeys, setDecryptedKeys] = useState<{
+    [key: string]: string
+  }>({})
+  const [encryptionKey, setEncryptionKey] = useState<string>('')
+  const [encryptionEnabled, setEncryptionEnabled] = useState(false)
+
+  // Cargar fabricantes y engines OCR al montar
   useEffect(() => {
     loadManufacturers()
+    loadAvailableOCREngines()
   }, [])
 
   // Cleanup de stream al desmontar
@@ -80,6 +93,45 @@ export default function WarehouseEntry() {
       setManufacturers(mfgs)
     } catch (err) {
       console.error('Error loading manufacturers:', err)
+    }
+  }
+
+  const loadAvailableOCREngines = async () => {
+    try {
+      const health = await checkHealth()
+
+      if (health.ocr_engines && health.ocr_engines.length > 0) {
+        setAvailableEngines(health.ocr_engines)
+        // Set default to first available engine
+        if (health.ocr_engines.length > 0) {
+          setOcrEngine(health.ocr_engines[0].name)
+        }
+      }
+
+      if (health.encryption_enabled && health.encryption_key) {
+        setEncryptionEnabled(health.encryption_enabled)
+        setEncryptionKey(health.encryption_key)
+
+        // Desencriptar keys disponibles
+        const keys: { [key: string]: string } = {}
+        for (const engine of health.ocr_engines || []) {
+          if (engine.api_key_encrypted) {
+            try {
+              keys[engine.name] = decryptAPIKey(
+                engine.api_key_encrypted,
+                health.encryption_key,
+                health.encryption_enabled
+              )
+              console.log(`✓ API Key de ${engine.name} desencriptada`)
+            } catch (err) {
+              console.error(`Error desencriptando key de ${engine.name}:`, err)
+            }
+          }
+        }
+        setDecryptedKeys(keys)
+      }
+    } catch (err) {
+      console.error('Error cargando motores OCR:', err)
     }
   }
 
@@ -178,7 +230,11 @@ export default function WarehouseEntry() {
           setGeneratingReference(true)
           try {
             const userId = getUserID()
-            const response = await processImage(imageBase64.split(',')[1], 'tesseract', userId)
+            // Map miniapi engine names to api engine names
+            let apiEngine: any = ocrEngine
+            if (ocrEngine === 'openai') apiEngine = 'openai-vision'
+            if (ocrEngine === 'claude') apiEngine = 'claude-vision'
+            const response = await processImage(imageBase64.split(',')[1], apiEngine, userId)
             if (response.success && response.ocr_result) {
               setReferencia(response.ocr_result.filtered_code || response.ocr_result.raw_text)
             }
@@ -214,7 +270,11 @@ export default function WarehouseEntry() {
         setGeneratingReference(true)
         try {
           const userId = getUserID()
-          const response = await processImage(imageBase64.split(',')[1], 'tesseract', userId)
+          // Map miniapi engine names to api engine names
+          let apiEngine: any = ocrEngine
+          if (ocrEngine === 'openai') apiEngine = 'openai-vision'
+          if (ocrEngine === 'claude') apiEngine = 'claude-vision'
+          const response = await processImage(imageBase64.split(',')[1], apiEngine, userId)
           if (response.success && response.ocr_result) {
             setReferencia(response.ocr_result.filtered_code || response.ocr_result.raw_text)
           }
@@ -425,6 +485,38 @@ export default function WarehouseEntry() {
         )}
 
         <div className="space-y-3">
+          {availableEngines.length > 0 && (
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Motor OCR</span>
+              <select
+                value={ocrEngine}
+                onChange={(e) => setOcrEngine(e.target.value)}
+                disabled={generatingReference}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              >
+                {availableEngines.map((engine) => (
+                  <option key={engine.name} value={engine.name}>
+                    {engine.name === 'tesseract' && '🔤 Tesseract (Gratis)'}
+                    {engine.name === 'easyocr' && '🔍 EasyOCR (Gratis)'}
+                    {engine.name === 'openai' && '🤖 OpenAI Vision'}
+                    {engine.name === 'claude' && '🧠 Claude Vision'}
+                  </option>
+                ))}
+              </select>
+
+              {/* Indicador de estado de API key */}
+              {(ocrEngine === 'openai' || ocrEngine === 'claude') && (
+                <div className="mt-2 text-xs flex items-center gap-1">
+                  {decryptedKeys[ocrEngine] ? (
+                    <span className="text-green-600 font-semibold">✓ API Key configurada</span>
+                  ) : (
+                    <span className="text-red-600 font-semibold">⚠️ API Key no configurada</span>
+                  )}
+                </div>
+              )}
+            </label>
+          )}
+
           <label className="block">
             <span className="text-sm font-medium text-gray-700">Referencia *</span>
             <input
