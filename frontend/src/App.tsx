@@ -5,7 +5,6 @@ import WarehouseEntry from './components/WarehouseEntry'
 import QRCode from './components/QRCode'
 import VersionBanner from './components/VersionBanner'
 import LanguageSelector from './i18n/LanguageSelector'
-import APIKeySettings from './components/APIKeySettings'
 import OperarioModal from './components/OperarioModal'
 import { getOperarioName } from './utils/operarioStorage'
 
@@ -13,7 +12,6 @@ type AppView = 'ocr' | 'warehouse'
 
 function App() {
   const { t } = useTranslation()
-  const [showSettings, setShowSettings] = useState(false)
   const [activeView, setActiveView] = useState<AppView>('warehouse')
   const [showOperarioModal, setShowOperarioModal] = useState(false)
   const [operario, setOperario] = useState('')
@@ -61,39 +59,12 @@ function App() {
                 👤 Cambiar
               </button>
             )}
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm font-semibold"
-              title="Configurar API Keys para motores de IA"
-            >
-              ⚙️ {t('settings.title')}
-            </button>
             <LanguageSelector />
           </div>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Settings Modal */}
-        {showSettings && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-screen overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-                <h2 className="text-lg font-bold text-gray-900">{t('settings.title')}</h2>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="p-6">
-                <APIKeySettings onClose={() => setShowSettings(false)} />
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Tabs */}
         <div className="mb-6 flex gap-2 border-b border-gray-200">
           <button
