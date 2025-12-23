@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/MVP-LogistiQ/',
   plugins: [
     react(),
     VitePWA({
@@ -14,8 +15,8 @@ export default defineConfig({
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
-        scope: '/',
-        start_url: '/',
+        scope: '/MVP-LogistiQ/',
+        start_url: '/MVP-LogistiQ/',
         icons: [
           {
             src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect fill="%23fff" width="192" height="192"/><text x="50%" y="50%" font-size="80" fill="%23000" text-anchor="middle" dominant-baseline="middle" font-weight="bold">LQ</text></svg>',
