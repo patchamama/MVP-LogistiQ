@@ -1,67 +1,61 @@
-# OCR Processing Flow - Complete Integration
+# OCR Processing Flow - Frontend-First Architecture
 
 ## Overview
 
 The application now has a complete OCR pipeline that:
-1. Retrieves encrypted API keys from the backend
-2. Decrypts them in the browser (JavaScript)
-3. Sends the decrypted keys to the MiniBACKEND
-4. Processes images with Claude Vision (with OpenAI fallback)
+1. Retrieves encrypted API keys from the backend health endpoint
+2. Decrypts them in the browser (JavaScript/CryptoJS)
+3. **Calls Claude Vision API directly from the frontend**
+4. Falls back to OpenAI Vision if Claude fails
 5. Extracts reference codes automatically
+6. **Backend has minimal involvement** (only provides encrypted keys)
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        FRONTEND (React)                      │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  WarehouseEntry Component                                    │
-│  ├─ Calls checkHealth() → Gets encryption_key               │
-│  ├─ Calls checkHealth() → Gets ocr_engines[].api_key_encrypted│
-│  ├─ Uses decryptAPIKey() → Decrypts keys locally            │
-│  └─ On image capture/upload:                                 │
-│     ├─ Converts image to base64                             │
-│     ├─ Calls processOCR(base64, claudeKey, openaiKey)       │
+┌──────────────────────────────────────────────────────────────┐
+│                      FRONTEND (React)                         │
+├──────────────────────────────────────────────────────────────┤
+│                                                                │
+│  WarehouseEntry Component                                     │
+│  ├─ Calls checkHealth()                                       │
+│  │  └─ Receives: encryption_key + ocr_engines[].api_key_enc  │
+│  │                                                             │
+│  └─ On image capture/upload:                                  │
+│     ├─ Converts image to base64                              │
+│     ├─ Calls processImageWithOCR()                           │
+│     │  ├─ Decrypts API keys locally (CryptoJS)              │
+│     │  ├─ Calls Claude Vision API directly                  │
+│     │  │  └─ https://api.anthropic.com/v1/messages          │
+│     │  │  └─ If fails → Continue to fallback                │
+│     │  │                                                      │
+│     │  └─ Calls OpenAI Vision API (fallback)                │
+│     │     └─ https://api.openai.com/v1/chat/completions    │
+│     │                                                         │
 │     └─ Fills referencia field with extracted code           │
-│                                                               │
-└─────────────────────────────────────────────────────────────┘
-                            ↓↓↓ HTTP
-┌─────────────────────────────────────────────────────────────┐
-│              MiniBACKEND (PHP) on Production                 │
-│                Backend at https://backend.patchamama.com     │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  POST /api/health                                            │
-│  └─ Returns:                                                 │
-│     ├─ encryption_enabled: boolean                          │
-│     ├─ encryption_key: hex string (64 chars)                │
-│     └─ ocr_engines: Array with api_key_encrypted            │
-│                                                               │
-│  POST /api/ocr/process                                       │
-│  ├─ Input:                                                   │
-│  │  ├─ image_base64: Image data                            │
-│  │  ├─ claude_api_key: Decrypted Claude key (optional)      │
-│  │  ├─ openai_api_key: Decrypted OpenAI key (optional)      │
-│  │  └─ language: 'es' or 'en' (default: es)                │
-│  │                                                            │
-│  ├─ OCRService Processing:                                  │
-│  │  ├─ Try Claude Vision API                                │
-│  │  │  └─ If success → Extract and return code             │
-│  │  │  └─ If fail → Continue to fallback                   │
-│  │  │                                                        │
-│  │  └─ Try OpenAI Vision API (fallback)                     │
-│  │     └─ If success → Extract and return code             │
-│  │     └─ If fail → Return error                           │
-│  │                                                            │
-│  └─ Output:                                                  │
-│     ├─ success: boolean                                     │
-│     ├─ code: string or null                                 │
-│     ├─ engine: 'claude' or 'openai'                         │
-│     ├─ raw_response: Full response text                     │
-│     └─ error: Error message if failed                       │
-│                                                               │
-└─────────────────────────────────────────────────────────────┘
+│                                                                │
+└──────────────────────────────────────────────────────────────┘
+                        ↓↓↓ HTTPS
+        ┌────────────────────────────────┐
+        │   Claude Vision API (Primary)   │
+        │  api.anthropic.com/v1/messages │
+        └────────────────────────────────┘
+                  OR (Fallback)
+        ┌────────────────────────────────┐
+        │   OpenAI Vision API            │
+        │ api.openai.com/v1/chat/comp... │
+        └────────────────────────────────┘
+                        ↓↓↓ HTTPS
+        ┌────────────────────────────────┐
+        │    MiniBACKEND (PHP)           │
+        │  backend.patchamama.com        │
+        │                                │
+        │  GET /api/health               │
+        │  └─ Returns:                   │
+        │     ├─ encryption_key: hex     │
+        │     └─ ocr_engines[]:          │
+        │        └─ api_key_encrypted    │
+        └────────────────────────────────┘
 ```
 
 ## Step-by-Step Flow
@@ -90,54 +84,47 @@ Response:
     }
   ]
 }
+
+// Store ENCRYPTED keys + encryption_key for later use
+setEncryptionKey(health.encryption_key)
+setEncryptedKeys({
+  openai: health.ocr_engines[0].api_key_encrypted,
+  claude: health.ocr_engines[1].api_key_encrypted
+})
 ```
 
-### 2. Decrypt API Keys
-```javascript
-// In loadAvailableOCREngines()
-for (const engine of health.ocr_engines) {
-  if (engine.api_key_encrypted) {
-    keys[engine.name] = decryptAPIKey(
-      engine.api_key_encrypted,
-      health.encryption_key,
-      health.encryption_enabled
-    )
-  }
-}
-// Result: decryptedKeys = { openai: "sk-proj-...", claude: "sk-ant-..." }
-```
-
-### 3. Image Capture / Upload
+### 2. Image Capture / Upload
 ```javascript
 // When user captures label with camera or uploads image
 const imageBase64Clean = imageBase64.split(',')[1]  // Remove data URI prefix
 
-const response = await processOCR(
+const response = await processImageWithOCR(
   imageBase64Clean,
-  decryptedKeys['claude'],    // Decrypted key
-  decryptedKeys['openai']     // Decrypted key
+  encryptedKeys['claude'],      // Still encrypted!
+  encryptedKeys['openai'],      // Still encrypted!
+  encryptionKey                 // Needed to decrypt
 )
 
 // Sets referencia field with extracted code
 setReferencia(response.code)
 ```
 
-### 4. Backend Processing
+### 3. Frontend OCR Service (ocr.ts)
 
-**HTTP Request to `/api/ocr/process`:**
-```json
-{
-  "image_base64": "iVBORw0KGgoAAAANSUhEUgAAAAUA...",
-  "claude_api_key": "sk-ant-v5...",
-  "openai_api_key": "sk-proj-...",
-  "language": "es"
-}
+**Inside `processImageWithOCR()`:**
+
+#### Step 1: Decrypt API Keys Locally
+```javascript
+// Decrypt using CryptoJS and the encryption key
+claudeKey = decryptAPIKey(encryptedClaudeKey, encryptionKey, true)
+openaiKey = decryptAPIKey(encryptedOpenAIKey, encryptionKey, true)
 ```
 
-**Claude Vision API Call (Primary):**
+#### Step 2: Try Claude Vision API (Primary)
 ```bash
 POST https://api.anthropic.com/v1/messages
-Authorization: Bearer sk-ant-v5...
+x-api-key: ${claudeKey}  // Decrypted key
+anthropic-version: 2023-06-01
 Content-Type: application/json
 
 {
@@ -157,7 +144,7 @@ Content-Type: application/json
         },
         {
           "type": "text",
-          "text": "[Extraction prompt in Spanish]"
+          "text": "Analiza esta imagen y extrae cualquier código..."
         }
       ]
     }
@@ -165,10 +152,21 @@ Content-Type: application/json
 }
 ```
 
-**If Claude Fails → OpenAI Vision API (Fallback):**
+**If Claude succeeds:**
+```javascript
+return {
+  success: true,
+  code: "ABC-123-XYZ",
+  engine: "claude",
+  rawResponse: "{...}",
+  error: null
+}
+```
+
+#### Step 3: Fallback to OpenAI Vision (if Claude fails)
 ```bash
 POST https://api.openai.com/v1/chat/completions
-Authorization: Bearer sk-proj-...
+Authorization: Bearer ${openaiKey}  // Decrypted key
 Content-Type: application/json
 
 {
@@ -186,7 +184,7 @@ Content-Type: application/json
         },
         {
           "type": "text",
-          "text": "[Extraction prompt in Spanish]"
+          "text": "Analiza esta imagen y extrae cualquier código..."
         }
       ]
     }
@@ -194,31 +192,18 @@ Content-Type: application/json
 }
 ```
 
-**Extraction Prompt (Spanish):**
-```
-Analiza esta imagen y extrae cualquier código de referencia, número de producto, código QR o número de identificación visible.
-
-Tu respuesta DEBE estar en este formato JSON exacto:
-{
-  "code": "EL_CÓDIGO_O_REFERENCIA_EXTRAÍDA",
-  "confidence": "alta/media/baja",
-  "type": "codigo_qr/numero_referencia/codigo_producto/codigo_barras/otro",
-  "details": "Descripción breve de lo encontrado"
+**If OpenAI succeeds:**
+```javascript
+return {
+  success: true,
+  code: "ABC-123-XYZ",
+  engine: "openai",
+  rawResponse: "{...}",
+  error: null
 }
 ```
 
-**Backend Response:**
-```json
-{
-  "success": true,
-  "code": "ABC-123-XYZ",
-  "engine": "claude",
-  "raw_response": "{\"code\": \"ABC-123-XYZ\", \"confidence\": \"alta\", ...}",
-  "error": null
-}
-```
-
-### 5. Frontend Updates
+### 4. Frontend Updates
 ```javascript
 // WarehouseEntry.tsx
 if (response.success && response.code) {
@@ -265,13 +250,14 @@ HTTPS (TLS 1.2+)
 
 ## Error Handling
 
-### If Claude Fails
+### If Claude Fails (Frontend)
 ```
-1. Claude API returns error or timeout
-2. Backend logs error
-3. Backend automatically tries OpenAI
-4. If OpenAI succeeds → Return response with engine: "openai"
-5. If OpenAI fails → Return error with both attempts failed
+1. Frontend calls Claude Vision API
+2. API returns error or timeout
+3. Frontend catches error and logs it
+4. Frontend automatically tries OpenAI
+5. If OpenAI succeeds → Return response with engine: "openai"
+6. If OpenAI fails → Return error with both attempts failed
 ```
 
 ### If Both APIs Fail
@@ -281,8 +267,15 @@ HTTPS (TLS 1.2+)
   "code": null,
   "engine": null,
   "error": "No se pudo procesar la imagen con Claude ni OpenAI",
-  "status": 500
+  "rawResponse": null
 }
+```
+
+### Frontend Error Console Output
+```
+⚠️ Claude failed, trying OpenAI fallback: Claude API error: 401 - Invalid x-api-key
+🔄 Falling back to OpenAI Vision...
+✓ Code extracted with OpenAI: ABC-123-XYZ
 ```
 
 ## Configuration
