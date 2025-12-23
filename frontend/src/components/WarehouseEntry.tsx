@@ -385,10 +385,7 @@ export default function WarehouseEntry({ initialOperario = '', onOperarioChange 
 
       if (response.success) {
         setStep('success')
-        // Reset del formulario después de 2 segundos
-        setTimeout(() => {
-          resetForm()
-        }, 2000)
+        // La pantalla de éxito permanece hasta que el usuario haga clic en "Nueva Entrada"
       } else {
         setError(response.message || 'Error al guardar la entrada')
       }
@@ -411,7 +408,8 @@ export default function WarehouseEntry({ initialOperario = '', onOperarioChange 
     setFabricante('')
     setNuevoFabricante('')
     setCantidad(1)
-    setOperario('')
+    // Mantener el operario del localStorage en lugar de borrarlo
+    setOperario(initialOperario)
     setObservaciones('')
     setImagenes([])
     setError(null)
