@@ -21,20 +21,21 @@ class EncryptionService
         $ivLength = openssl_cipher_iv_length(self::CIPHER);
         $iv = openssl_random_pseudo_bytes($ivLength);
 
+        // Usar 0 para obtener base64 directamente (sin OPENSSL_RAW_OUTPUT)
         $encrypted = openssl_encrypt(
             $plaintext,
             self::CIPHER,
             $key,
-            1, // OPENSSL_RAW_OUTPUT = 1
+            0, // 0 = base64 output (no raw)
             $iv
         );
 
-        // Formato: IV::encrypted (ambos en base64)
-        // El IV se almacena en hex para fácil legibilidad
+        // Formato: IV::encrypted (ambos en hex/base64)
+        // El IV se almacena en hex para separación clara
         $ivHex = bin2hex($iv);
-        $encryptedBase64 = base64_encode($encrypted);
 
-        $combined = $ivHex . '::' . $encryptedBase64;
+        // Ya está en base64, no necesitamos codificar de nuevo
+        $combined = $ivHex . '::' . $encrypted;
         return base64_encode($combined);
     }
 
@@ -69,18 +70,12 @@ class EncryptionService
                 throw new Exception('Invalid IV format');
             }
 
-            // 4. Decodificar datos encriptados
-            $encrypted = base64_decode($encryptedBase64, true);
-            if ($encrypted === false) {
-                throw new Exception('Invalid encrypted data');
-            }
-
-            // 5. Desencriptar
+            // 4. Desencriptar (el encrypted ya está en base64, usar 0 para decodificar automáticamente)
             $plaintext = openssl_decrypt(
-                $encrypted,
+                $encryptedBase64,
                 self::CIPHER,
                 $key,
-                1, // OPENSSL_RAW_OUTPUT = 1
+                0, // 0 = espera base64 encoding, decodifica automáticamente
                 $iv
             );
 

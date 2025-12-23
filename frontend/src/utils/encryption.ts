@@ -22,7 +22,7 @@ export function decryptAPIKey(
   }
 
   try {
-    // 1. Decodificar base64 principal
+    // 1. Decodificar base64 principal para obtener IV::base64encrypted
     let decoded: string
     try {
       decoded = atob(encryptedData)
@@ -30,7 +30,7 @@ export function decryptAPIKey(
       throw new Error('Invalid base64 format in encrypted data')
     }
 
-    // 2. Separar IV y datos encriptados
+    // 2. Separar IV (hex) y datos encriptados (base64)
     const parts = decoded.split('::', 2)
     if (parts.length !== 2) {
       throw new Error('Invalid cipher format - expected IV::encrypted')
@@ -54,17 +54,10 @@ export function decryptAPIKey(
       throw new Error('Invalid encryption key format')
     }
 
-    // 5. Decodificar datos encriptados desde base64
-    let encrypted: CryptoJS.lib.WordArray
-    try {
-      encrypted = CryptoJS.enc.Base64.parse(encryptedBase64)
-    } catch (e) {
-      throw new Error('Invalid base64 format in encrypted payload')
-    }
-
-    // 6. Desencriptar usando AES-256-CBC
+    // 5. El encryptedBase64 ya está en base64 (viene del PHP openssl_encrypt con flag 0)
+    // CryptoJS puede desencriptar directamente desde base64
     const decrypted = CryptoJS.AES.decrypt(
-      { ciphertext: encrypted } as any,
+      encryptedBase64, // Ya está en base64
       key,
       {
         iv: iv,
@@ -73,7 +66,7 @@ export function decryptAPIKey(
       }
     )
 
-    // 7. Convertir resultado a string UTF-8
+    // 6. Convertir resultado a string UTF-8
     const plaintext = decrypted.toString(CryptoJS.enc.Utf8)
 
     if (!plaintext) {
